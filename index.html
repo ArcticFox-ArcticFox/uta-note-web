@@ -5179,10 +5179,15 @@ body.practice-view #addSongBtn{ display:none; }
   function baseNameOf(path) {
     return String(path ?? "").split(/[\\/]/).filter(Boolean).pop() || "";
   }
+  var backendPresent = false;
+  function setBackendPresent(v) {
+    backendPresent = !!v;
+  }
   function useLocalFiles() {
     if (typeof location === "undefined") return false;
     if (typeof window !== "undefined" && window.__utaMixForceOffline === true) return true;
-    return !/^https?:$/.test(location.protocol);
+    if (!/^https?:$/.test(location.protocol)) return true;
+    return location.protocol === "https:" && !backendPresent;
   }
   var pool = /* @__PURE__ */ new Map();
   var urls = /* @__PURE__ */ new WeakMap();
@@ -5432,7 +5437,9 @@ body.practice-view #addSongBtn{ display:none; }
         return;
       }
       audio.classList.add("hidden");
-      if (hint2) hint2.textContent = `\u627E\u4E0D\u5230\u300C${rawPath}\u300D\uFF0C\u8ACB\u78BA\u8A8D\u8DEF\u5F91\u6B63\u78BA`;
+      if (hint2) {
+        hint2.textContent = useLocalFiles() && !pooled ? `\u627E\u4E0D\u5230\u300C${rawPath}\u300D\uFF0C\u7DB2\u9801\u8B80\u4E0D\u5230\u96FB\u8166\u88E1\u7684\u6A94\u6848\uFF0C\u8ACB\u91CD\u65B0\u9078\u53D6\u9019\u500B\u6A94\u6848\uFF08\u6216\u300C\u9078\u64C7\u97F3\u6A02\u8CC7\u6599\u593E\u300D\uFF09` : `\u627E\u4E0D\u5230\u300C${rawPath}\u300D\uFF0C\u8ACB\u78BA\u8A8D\u8DEF\u5F91\u6B63\u78BA`;
+      }
       audio.dispatchEvent(new CustomEvent("audioloadfailed", { bubbles: true, detail: { songId } }));
     };
     audio.oncanplay = () => {
@@ -5496,6 +5503,10 @@ body.practice-view #addSongBtn{ display:none; }
     }
     const folderBtn = document.querySelector("#audioPickFolderBtn");
     const folderInput = document.querySelector("#audioFolderInput");
+    if (dropZone && useLocalFiles()) {
+      const tip = dropZone.querySelector("span");
+      if (tip) tip.textContent = "\u7DB2\u9801\u8B80\u4E0D\u5230\u96FB\u8166\u88E1\u7684\u6A94\u6848\u672C\u8EAB\uFF1A\u9078\u597D\u7684\u6A94\u6848\u9019\u6B21\u958B\u555F\u671F\u9593\u53EF\u4EE5\u76F4\u63A5\u64AD\u653E\uFF0C\u91CD\u65B0\u6574\u7406\u5F8C\u8981\u91CD\u9078";
+    }
     if (folderBtn && folderInput && useLocalFiles()) {
       document.querySelector("#audioPickFolderRow")?.classList.remove("hidden");
       const meta = document.querySelector("#audioPickFolderMeta");
@@ -12383,6 +12394,7 @@ ${err.message}`);
         "\u9019\u500B\u700F\u89BD\u5668\u88E1\u6709\u4E00\u4EFD\u6B4C\u5EAB\uFF0CNAS \u4F3A\u670D\u5668\u4E0A\u4E5F\u6709\u4E00\u4EFD\uFF0C\u800C\u4E14\u5169\u908A\u4E0D\u662F\u540C\u4E00\u500B\u4F86\u6E90\u3002\n\n\u3010\u78BA\u5B9A\u3011\u6539\u7528\u4F3A\u670D\u5668\u4E0A\u7684\u7248\u672C\uFF08\u9019\u500B\u700F\u89BD\u5668\u7684\u7248\u672C\u6703\u5148\u5099\u4EFD\uFF09\n\u3010\u53D6\u6D88\u3011\u7528\u9019\u500B\u700F\u89BD\u5668\u7684\u7248\u672C\u8986\u84CB\u4F3A\u670D\u5668\uFF08\u4F3A\u670D\u5668\u6703\u81EA\u52D5\u7559\u4E00\u4EFD\u820A\u7248\u5FEB\u7167\uFF0C\u53EF\u4EE5\u9084\u539F\uFF09"
       )
     });
+    setBackendPresent(isServerMode());
     window.utaChangeLog = getChangeLog;
     window.utaBlockedLog = getBlockedLog;
     document.addEventListener("inputblocked", (e) => handleBlockedInput(e.detail || {}));
