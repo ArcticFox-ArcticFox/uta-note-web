@@ -1624,7 +1624,7 @@ body.practice-view #addSongBtn{ display:none; }
             <button id="cancelImportBtn" class="text-xs px-3 py-1.5 border border-[color:var(--line)]">取消</button>
           </div>
           <p class="text-xs text-[color:var(--muted)] mt-1">
-            「自動標注假名」會辨識上面文字框裡還沒標過假名的漢字並自動加註（已經手動標好、或分色/角色標記的部分不會被覆蓋），標完仍會留在文字框裡讓你先檢查，確認沒問題再按「套用」。首次使用需要下載日文語言辭典（約數 MB），需要一點時間。
+            「自動標注假名」會辨識上面文字框裡還沒標過假名的漢字並自動加註（已經手動標好、或分色/角色標記的部分不會被覆蓋），標完仍會留在文字框裡讓你先檢查，確認沒問題再按「套用」。首次使用需要下載日文語言辭典（約 20MB），需要一點時間。
           </p>
         </div>
       </div>
@@ -3562,7 +3562,22 @@ body.practice-view #addSongBtn{ display:none; }
 
   // js/engine/kuroshiro-helper.js
   var KUROMOJI_DICT_PATH = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
+  var DICT_INIT_TIMEOUT_MS = 9e4;
   var kuroshiroInitPromise = null;
+  function repairCollapsedScheme(url) {
+    return typeof url === "string" ? url.replace(/^(https?:)\/(?!\/)/i, "$1//") : url;
+  }
+  function patchXhrOpenForDict() {
+    if (typeof XMLHttpRequest === "undefined") return () => {
+    };
+    const original = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+      return original.call(this, method, repairCollapsedScheme(url), ...rest);
+    };
+    return () => {
+      XMLHttpRequest.prototype.open = original;
+    };
+  }
   function getKuroshiro() {
     if (!kuroshiroInitPromise) {
       kuroshiroInitPromise = (async () => {
@@ -3573,7 +3588,22 @@ body.practice-view #addSongBtn{ display:none; }
         }
         const kuroshiro = new window.Kuroshiro();
         const analyzer = new window.KuromojiAnalyzer({ dictPath: KUROMOJI_DICT_PATH });
-        await kuroshiro.init(analyzer);
+        const restoreXhr = patchXhrOpenForDict();
+        let timer;
+        try {
+          await Promise.race([
+            kuroshiro.init(analyzer),
+            new Promise((_, reject) => {
+              timer = setTimeout(
+                () => reject(new Error(`\u65E5\u6587\u8FAD\u5178\uFF08\u7D04 20MB\uFF09\u4E0B\u8F09\u903E\u6642\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u53EF\u4EE5\u9023\u5230 cdn.jsdelivr.net \u5F8C\u518D\u8A66\u4E00\u6B21`)),
+                DICT_INIT_TIMEOUT_MS
+              );
+            })
+          ]);
+        } finally {
+          clearTimeout(timer);
+          restoreXhr();
+        }
         return kuroshiro;
       })().catch((err) => {
         kuroshiroInitPromise = null;
@@ -4646,7 +4676,7 @@ body.practice-view #addSongBtn{ display:none; }
       const requestedSongId = song2.id;
       const originalLabel = autoFuriganaBtn.textContent;
       autoFuriganaBtn.disabled = true;
-      autoFuriganaBtn.textContent = "\u8655\u7406\u4E2D\u2026\uFF08\u9996\u6B21\u4F7F\u7528\u9700\u4E0B\u8F09\u8FAD\u5178\uFF0C\u8ACB\u7A0D\u5019\uFF09";
+      autoFuriganaBtn.textContent = "\u8655\u7406\u4E2D\u2026\uFF08\u9996\u6B21\u4F7F\u7528\u9700\u4E0B\u8F09\u7D04 20MB \u7684\u8FAD\u5178\uFF0C\u8ACB\u7A0D\u5019\uFF09";
       try {
         const lines = textarea.value.split("\n");
         const annotated = await autoAnnotateFurigana(lines, song2);
