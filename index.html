@@ -5187,7 +5187,10 @@ body.practice-view #addSongBtn{ display:none; }
     if (typeof location === "undefined") return false;
     if (typeof window !== "undefined" && window.__utaMixForceOffline === true) return true;
     if (!/^https?:$/.test(location.protocol)) return true;
-    return location.protocol === "https:" && !backendPresent;
+    return relativeUrlsUnusable();
+  }
+  function relativeUrlsUnusable() {
+    return typeof location !== "undefined" && location.protocol === "https:" && !backendPresent;
   }
   var pool = /* @__PURE__ */ new Map();
   var urls = /* @__PURE__ */ new WeakMap();
@@ -8748,6 +8751,9 @@ body.practice-view #addSongBtn{ display:none; }
     deps = d;
     onUpdate = typeof d.onChange === "function" ? d.onChange : () => {
     };
+    if (typeof document !== "undefined") {
+      document.addEventListener("localfilesloaded", retryPooledDurations);
+    }
     try {
       const raw = d.load();
       const obj = raw ? JSON.parse(raw) : null;
@@ -8792,6 +8798,16 @@ body.practice-view #addSongBtn{ display:none; }
     }
     return added;
   }
+  function pooledSrc(source) {
+    if (!source || !useLocalFiles()) return null;
+    const file = findFile(source);
+    return file ? urlForFile(file) : null;
+  }
+  function retryPooledDurations() {
+    const retry = [...failed].filter((source) => pooledSrc(source));
+    retry.forEach((source) => failed.delete(source));
+    requestDurations(retry);
+  }
   function requestDurations(sources) {
     let added = false;
     for (const source of sources) {
@@ -8819,6 +8835,12 @@ body.practice-view #addSongBtn{ display:none; }
     }
   }
   async function probe(source) {
+    const local = pooledSrc(source);
+    if (local) {
+      const seconds = await probeOne(local);
+      if (usable(seconds)) return seconds;
+      if (relativeUrlsUnusable()) return null;
+    }
     const variants = [source, source.normalize("NFD"), source.normalize("NFC")].filter((v, i, a) => a.indexOf(v) === i);
     for (const variant of variants) {
       const seconds = await probeOne(toAudioSrc(variant));
