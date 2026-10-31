@@ -48,7 +48,7 @@
 
 在你的電腦上離線執行：去除人聲、把你自己的歌詞逐行對到時間上，產生 `.lrc`（打軸初稿）與人聲壓低的導音版；另有錄音混音與 LRC 編輯。**輸出是初稿，匯入後請自己聽過再修。**
 
-- **下載**：到 [Releases](../../releases)，Mac（Apple 晶片）選檔名結尾 `-mac.zip`，Windows（64 位元）選 `-win.zip`。
+- **下載**：到 [Releases](../../releases)，Mac（Apple 晶片）下載 `uta-note-auto-timing-v版本-mac.zip`，Windows（64 位元）下載 `uta-note-auto-timing-v版本-win.zip`。
 - 解壓縮後開啟「打軸.command」（Mac）或「打軸.bat」（Windows），第一次會自動安裝環境（約 1.5GB，需要網路）；操作請看資料夾裡的「使用教學.html」。
 - 不支援 Intel Mac；目前只有日文歌驗證過。
 

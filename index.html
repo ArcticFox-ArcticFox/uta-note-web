@@ -7,9 +7,8 @@
 
 <!-- 加到主畫面（v0.1.10 新增，原始檔案沒有這個功能）：只做「加到主畫面後全螢幕開、
      看起來像 App」這一層，不含離線快取（Service Worker 需要 HTTPS 安全情境，這個工具
-     實際透過 NAS／Tailscale 用純 HTTP 存取，見 CLAUDE.md「歌名／歌手／編號／網址單點
-     複製」一節同樣的限制），離線快取留到之後真的架了 HTTPS（例如開 Tailscale
-     的 HTTPS Certificates）再做，屆時才需要另外的 manifest.json／sw.js。
+     有些開啟方式是純 HTTP，見 CLAUDE.md「歌名／歌手／編號／網址單點複製」一節同樣的
+     限制），離線快取留到所有開啟方式都是 HTTPS 再做，屆時才需要另外的 manifest.json／sw.js。
      【2026-09-28 真正的根因找到了，之前兩次「data: URI 導致加入主畫面失敗」的推論是錯的】
      apple-touch-icon 圖示檔案本身其實是壞的：產生圖示時是在瀏覽器裡用 canvas 畫完、把
      結果的 base64 字串手動搬到檔案系統寫成 .png，這個字串有一萬字元以上，經過這道「手動
@@ -46,7 +45,7 @@
 <!-- 設計 token 與版面樣式：對應原檔案內嵌的 <style>，拆成外部檔案維護
      （見模組化架構文件三：css/variables.css／css/layout.css／css/pdf-export.css） -->
 <style>
-/* 本檔複製自共用設計令牌 v0.2（~/Documents/筆記庫/設計/tokens.css，2026-10-29）。
+/* 本檔複製自共用設計令牌 v0.2（2026-10-29；來源檔位置見 CLAUDE.md「顏色變數來自共用設計令牌」）。
  * 不要在這裡改值：專案自己的覆蓋寫在 variables.css；共用值要改，先改來源檔再複製過來。
  * 這個專案目前只有淺色：index.html 的 <html data-theme="light"> 讓下面的深色規則不生效。 */
 
