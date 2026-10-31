@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,21 +46,172 @@
 <!-- 設計 token 與版面樣式：對應原檔案內嵌的 <style>，拆成外部檔案維護
      （見模組化架構文件三：css/variables.css／css/layout.css／css/pdf-export.css） -->
 <style>
+/* 本檔複製自共用設計令牌 v0.2（~/Documents/筆記庫/設計/tokens.css，2026-10-29）。
+ * 不要在這裡改值：專案自己的覆蓋寫在 variables.css；共用值要改，先改來源檔再複製過來。
+ * 這個專案目前只有淺色：index.html 的 <html data-theme="light"> 讓下面的深色規則不生效。 */
+
+/*
+ * 共用設計令牌（草案 v0.2，2026-10-29）
+ * 方向：A 暖米白＋藍（使用者從三個方向對照後選定，對照頁在 mockups/tokens-compare.html）。
+ * 說明與使用方式見同資料夾的「03-設計令牌.md」；改值後開同資料夾的 tokens-check.html 確認對比。
+ *
+ * 用法：各專案打包成單檔，所以把這個檔案「複製」進專案（例如 css/tokens.css），放在其他樣式之前。
+ * 元件只用 var(--…)，不要寫死色碼。深色模式：預設跟隨系統，<html data-theme="dark|light"> 可手動覆蓋。
+ * 斷點不能寫成 CSS 變數（media query 不吃 var()），慣例值見文件：手機 ≤ 767px、桌面 ≥ 768px。
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- 顏色（淺色） ---------- */
+  --color-bg: #FBF8F1;            /* 頁面底色（暖米白） */
+  --color-surface: #FFFFFF;       /* 卡片、輸入框、對話框 */
+  --color-surface-2: #F3EEE3;     /* hover、次要區塊、表頭 */
+  --color-border: #E2DACB;        /* 分隔線、卡片邊框（裝飾用，不承載資訊；對比約 1.3–1.4） */
+  --color-border-strong: #8C826D; /* 輸入框、核取方塊等表單元件的邊框；各底色 ≥ 3.19（WCAG 1.4.11） */
+  --color-text: #2B2A28;          /* 主要文字 */
+  --color-text-muted: #6F6957;    /* 次要文字；在 bg 5.16、在 surface 5.48 */
+  --color-accent: #2A66AF;        /* 連結、主要按鈕、焦點外框、選取；各底色 ≥ 4.87（v0.1 的 #2E6FBE 在 surface-2 只有 4.39） */
+  --color-accent-hover: #1F5596;  /* 主要按鈕 hover／按下；白字 7.51 */
+  --color-on-accent: #FFFFFF;     /* 放在 accent 上的文字；5.80 */
+  --color-accent-soft: #E3ECF8;   /* 選取列、標籤底色；text 在上面 12.03 */
+  --color-danger: #B3261E;        /* 錯誤、刪除；各底色 ≥ 5.46 */
+  --color-danger-soft: #FBE6E3;   /* 錯誤提示的底 */
+  --color-success: #276B44;       /* 成功；各底色 ≥ 5.38（v0.1 的 #2E7D4F 在 surface-2 只有 4.36） */
+  --color-success-soft: #E2F1E7;
+  --color-warning: #8A5A00;       /* 注意；各底色 ≥ 4.97 */
+  --color-warning-soft: #FBEFD9;
+  --color-info: #2F5E96;          /* 一般資訊提示；各底色 ≥ 5.57 */
+  --color-info-soft: #E3ECF8;
+  --color-overlay: rgb(43 42 40 / .45); /* 對話框遮罩 */
+
+  /* ---------- 字型與字級 ---------- */
+  --font-sans: system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --text-xs: 12px;   /* 標籤、表格註記；只用在非必讀資訊 */
+  --text-sm: 14px;   /* 次要說明、按鈕 */
+  --text-md: 16px;   /* 內文（手機輸入框不要小於這個，否則 iOS 會自動放大） */
+  --text-lg: 20px;   /* 區塊標題 */
+  --text-xl: 24px;   /* 頁面標題 */
+  --leading-body: 1.6;
+  --leading-tight: 1.3;
+  --weight-regular: 400;
+  --weight-bold: 600;
+
+  /* ---------- 間距（4 的倍數） ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* ---------- 圓角 ---------- */
+  --radius-sm: 4px;     /* 清單列、小標記 */
+  --radius-md: 8px;     /* 按鈕、輸入框、卡片 */
+  --radius-lg: 12px;    /* 對話框、大區塊 */
+  --radius-pill: 999px; /* 標籤 */
+
+  /* ---------- 陰影（兩層就好） ---------- */
+  --shadow-1: 0 1px 2px rgb(0 0 0 / .06), 0 1px 3px rgb(0 0 0 / .08); /* 卡片 */
+  --shadow-2: 0 4px 12px rgb(0 0 0 / .12);                             /* 浮動選單、對話框 */
+
+  /* ---------- 焦點、動效、觸控、層級 ---------- */
+  --focus-width: 2px;   /* outline: var(--focus-width) solid var(--color-accent) */
+  --focus-offset: 2px;
+  --duration-fast: 120ms;  /* hover、按下 */
+  --duration-base: 200ms;  /* 展開、淡入 */
+  --ease: cubic-bezier(.2, 0, 0, 1);
+  --touch-min: 44px;       /* 手機上可點目標的最小高寬 */
+  --z-sticky: 10;
+  --z-dropdown: 100;
+  --z-overlay: 1000;
+  --z-toast: 1100;
+}
+
+/* ---------- 顏色（深色）：跟隨系統，data-theme="light" 可強制淺色 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-bg: #1C1B19;
+    --color-surface: #262522;
+    --color-surface-2: #302E2A;
+    --color-border: #3D3A35;
+    --color-border-strong: #857E6C;
+    --color-text: #EDEAE3;
+    --color-text-muted: #ABA596;
+    --color-accent: #7FAEE8;
+    --color-accent-hover: #9DC2EF;
+    --color-on-accent: #10233B;
+    --color-accent-soft: #22324A;
+    --color-danger: #F2938C;
+    --color-danger-soft: #3D2623;
+    --color-success: #7CC79A;
+    --color-success-soft: #1F3327;
+    --color-warning: #E6B65C;
+    --color-warning-soft: #3A3020;
+    --color-info: #8FB4E6;
+    --color-info-soft: #22324A;
+    --color-overlay: rgb(0 0 0 / .6);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / .4);
+    --shadow-2: 0 4px 12px rgb(0 0 0 / .5);
+  }
+}
+/* 手動切到深色（值與上面相同，改一處要同步改另一處） */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #1C1B19;
+  --color-surface: #262522;
+  --color-surface-2: #302E2A;
+  --color-border: #3D3A35;
+  --color-border-strong: #857E6C;
+  --color-text: #EDEAE3;
+  --color-text-muted: #ABA596;
+  --color-accent: #7FAEE8;
+  --color-accent-hover: #9DC2EF;
+  --color-on-accent: #10233B;
+  --color-accent-soft: #22324A;
+  --color-danger: #F2938C;
+  --color-danger-soft: #3D2623;
+  --color-success: #7CC79A;
+  --color-success-soft: #1F3327;
+  --color-warning: #E6B65C;
+  --color-warning-soft: #3A3020;
+  --color-info: #8FB4E6;
+  --color-info-soft: #22324A;
+  --color-overlay: rgb(0 0 0 / .6);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / .4);
+  --shadow-2: 0 4px 12px rgb(0 0 0 / .5);
+}
+
+/* ---------- 尊重「減少動態效果」 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}
+
 /* ==========================================================================
    variables.css
-   設計 token（顏色變數）。對應改寫版.md 的「7.5 CSS／視覺系統規格」。
-   日後整體換色或做深色模式，只需要改這個檔案。
+   專案自己的顏色變數。值來自共用設計令牌（css/tokens.css，方向 A 暖米白＋藍），
+   這裡只把原本的名稱指過去，元件照舊用 --ink、--paper 等名稱。
+   對應改寫版.md 的「7.5 CSS／視覺系統規格」。
+   日後整體換色或做深色模式：共用的值改 tokens.css，專案特有的覆蓋改這個檔案。
    ========================================================================== */
 
 :root{
-  --ink:#2B2A28;        /* 主文字色（偏暖黑，非純黑） */
-  --paper:#FBF8F1;       /* 主背景色（米白紙色） */
-  --paper-deep:#F4EFE2;  /* 次背景色，用於 hover／active 狀態 */
-  --line:#E3DBC8;        /* 邊框線色 */
-  --muted:#6F6957;       /* 次要文字（假名、說明文字）；對比 4.9:1 以上，原 #8A8371 只有 3.4～3.6 */
-  --accent:#2E6FBE;      /* 主要互動色（連結、主要按鈕） */
-  --accent-deep:#1F3A55; /* 互動色的 hover／deep 版本 */
-  --seal:#9C4B42;        /* 危險操作色（刪除），呼應印章紅 */
+  /* 專案覆蓋：刪除等危險操作沿用「印章紅」，不用令牌預設的紅（在白底 6.0、米白底 5.66） */
+  --color-danger:#9C4B42;
+
+  --ink:var(--color-text);              /* 主文字色（偏暖黑，非純黑） */
+  --paper:var(--color-bg);              /* 主背景色（米白紙色） */
+  --paper-deep:var(--color-surface-2);  /* 次背景色，用於 hover／active 狀態（原 #F4EFE2） */
+  --line:var(--color-border);           /* 邊框線色（原 #E3DBC8） */
+  --muted:var(--color-text-muted);      /* 次要文字（假名、說明文字）；對比 4.9:1 以上，原 #8A8371 只有 3.4～3.6 */
+  --accent:var(--color-accent);         /* 主要互動色（連結、主要按鈕） */
+  --accent-deep:#1F3A55;                /* 互動色的 hover／deep 版本（專案特有，令牌沒有對應） */
+  --seal:var(--color-danger);           /* 危險操作色（刪除），呼應印章紅 */
 }
 
 /* ==========================================================================
@@ -1238,7 +1389,7 @@ body.practice-view #addSongBtn{ display:none; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 0.13.6</span>
+        <span class="tabular-nums">V 0.13.8</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -1379,6 +1530,12 @@ body.practice-view #addSongBtn{ display:none; }
           刪除此歌曲
         </button>
       </div>
+    </div>
+
+    <!-- v0.13.8 新增：頁尾常駐署名（授權要求畫面上清楚顯示原作者與原始碼連結），點「關於與下載」開 #aboutDialog；見 components/about-dialog.js -->
+    <div id="sidebarFooter" class="shrink-0 border-t border-[color:var(--line)] px-3 py-2 text-[11px] text-[color:var(--muted)] text-center flex flex-wrap justify-center gap-x-3">
+      <span>原作者：北極狐</span>
+      <button id="aboutOpenBtn" type="button" class="text-[color:var(--accent)] underline underline-offset-2">關於與下載 ▸</button>
     </div>
 
   </aside>
@@ -1740,6 +1897,24 @@ body.practice-view #addSongBtn{ display:none; }
     <div class="mt-4 flex justify-end gap-2">
       <button type="button" id="lrcCancelBtn" class="text-xs px-3 py-1.5 border border-[color:var(--line)]">取消</button>
       <button type="button" id="lrcApplyBtn" class="text-xs px-3 py-1.5 bg-[color:var(--accent)] text-white">套用</button>
+    </div>
+  </div>
+</div>
+
+<!-- 關於與下載（v0.13.8）：連結是固定常數，不是使用者輸入；外連一律 rel="noopener noreferrer"。公開 repo 是 uta-note-web。 -->
+<div id="aboutDialog" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+  <div class="bg-white p-5 w-[24rem] max-w-[92vw] shadow-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="aboutDialogTitle">
+    <p id="aboutDialogTitle" class="font-serif-jp text-lg font-bold mb-3">關於 日文歌練習室</p>
+    <div class="text-sm text-[color:var(--ink)] space-y-2">
+      <p>原作者：北極狐<br><span class="text-xs text-[color:var(--muted)]">授權：PolyForm Noncommercial 1.0.0（禁止商業使用）</span></p>
+      <ul class="list-disc pl-5 space-y-1">
+        <li><a href="https://github.com/ArcticFox-ArcticFox/uta-note-web" target="_blank" rel="noopener noreferrer" class="text-[color:var(--accent)] underline underline-offset-2">原始碼（GitHub）↗</a></li>
+        <li><a href="https://github.com/ArcticFox-ArcticFox/uta-note-web/releases" target="_blank" rel="noopener noreferrer" class="text-[color:var(--accent)] underline underline-offset-2">打軸工具下載（Mac／Windows）↗</a></li>
+        <li><a href="https://github.com/ArcticFox-ArcticFox/uta-note-web/releases" target="_blank" rel="noopener noreferrer" class="text-[color:var(--accent)] underline underline-offset-2">版本紀錄 ↗</a></li>
+      </ul>
+    </div>
+    <div class="mt-4 flex justify-end">
+      <button type="button" id="aboutCloseBtn" class="text-xs px-3 py-1.5 border border-[color:var(--line)]">關閉</button>
     </div>
   </div>
 </div>
@@ -3253,6 +3428,17 @@ body.practice-view #addSongBtn{ display:none; }
       if (isUsable2(plan.ids[pos])) return { ids: plan.ids, pos };
     }
     return null;
+  }
+  function planProgress(plan, isUsable2) {
+    if (!plan || !Array.isArray(plan.ids)) return { position: 0, total: 0, left: 0 };
+    let position = 0;
+    let total = 0;
+    plan.ids.forEach((id, i) => {
+      if (!isUsable2(id)) return;
+      total += 1;
+      if (i <= plan.pos) position += 1;
+    });
+    return { position, total, left: total - position };
   }
   function hasNextInPlan(plan, { queueIds: queueIds2, isUsable: isUsable2, mode: mode3 }) {
     if (!plan) return false;
@@ -8958,7 +9144,10 @@ body.practice-view #addSongBtn{ display:none; }
       const cur = currentOfPlan(q.plan);
       const pos = ids.indexOf(cur) + 1;
       const label = $2("#pqNowLabel");
-      if (label) label.textContent = `\u7DF4\u7FD2\u6B4C\u55AE ${pos > 0 ? pos : "-"}/${ids.length}`;
+      if (label) {
+        const prog = planProgress(q.plan, isUsable);
+        label.textContent = q.mode.shuffle && prog.total > 0 ? `\u96A8\u6A5F ${prog.position}/${prog.total}` : `\u7DF4\u7FD2\u6B4C\u55AE ${pos > 0 ? pos : "-"}/${ids.length}`;
+      }
       const next = $2("#pqNextBtn");
       if (next) next.disabled = !hasNextInPlan(q.plan, planCtx());
     }
@@ -9013,7 +9202,7 @@ body.practice-view #addSongBtn{ display:none; }
   }
   function setClockText(el2, prefix, seconds) {
     if (!el2) return;
-    const html = `${prefix} <b>${formatClock(seconds)}</b>`;
+    const html = `${prefix}${prefix.endsWith("\u30FB") ? "" : " "}<b>${formatClock(seconds)}</b>`;
     if (el2.innerHTML !== html) el2.innerHTML = html;
   }
   function updateTimeBar() {
@@ -9052,7 +9241,8 @@ body.practice-view #addSongBtn{ display:none; }
     } else if (q.active && q.mode.loop) {
       setText(rightEl, "\u5FAA\u74B0\u4E2D");
     } else if (q.active && sum.remaining !== null && sum.total > 0) {
-      setClockText(rightEl, sum.remainingUnknown > 0 ? "\u5269\u7D04" : "\u5269", sum.remaining);
+      const left = planProgress(q.plan, isUsable).left;
+      setClockText(rightEl, `\u5269 ${left} \u9996\u30FB${sum.remainingUnknown > 0 ? "\u7D04" : ""}`, sum.remaining);
       fill = sum.progress;
     } else if (sum.unknown > 0 && !(durations && durations.hasPending())) {
       setText(rightEl, `${sum.unknown} \u9996\u9577\u5EA6\u4E0D\u660E`);
@@ -10997,6 +11187,31 @@ body.practice-view #addSongBtn{ display:none; }
     if (audioEl3()?.getAttribute("src")) onSourceChanged();
   }
 
+  // js/components/about-dialog.js
+  function bindAboutDialog() {
+    const dialog = document.querySelector("#aboutDialog");
+    const openBtn = document.querySelector("#aboutOpenBtn");
+    const closeBtn = document.querySelector("#aboutCloseBtn");
+    if (!dialog || !openBtn) return;
+    const close = () => {
+      dialog.classList.add("hidden");
+      document.removeEventListener("keydown", onKey);
+      openBtn.focus();
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") close();
+    };
+    openBtn.addEventListener("click", () => {
+      dialog.classList.remove("hidden");
+      document.addEventListener("keydown", onKey);
+      closeBtn?.focus();
+    });
+    closeBtn?.addEventListener("click", close);
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) close();
+    });
+  }
+
   // js/components/resume-position.js
   var SAVE_INTERVAL_MS = 5e3;
   var HINT_PREFIX = "\u5DF2\u56DE\u5230\u4E0A\u6B21\u7684\u4F4D\u7F6E";
@@ -12486,6 +12701,7 @@ ${err.message}`);
     bindClearSongsMenu();
     bindImportDialog();
     bindReplayTourBtn();
+    bindAboutDialog();
     bindMobileViewToggle();
     bindLrcDialog();
     bindToolMenus();
