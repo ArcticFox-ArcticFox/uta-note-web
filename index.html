@@ -1388,7 +1388,7 @@ body.practice-view #addSongBtn{ display:none; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 0.13.8</span>
+        <span class="tabular-nums">V 0.13.9</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -1900,7 +1900,9 @@ body.practice-view #addSongBtn{ display:none; }
   </div>
 </div>
 
-<!-- 關於與下載（v0.13.8）：連結是固定常數，不是使用者輸入；外連一律 rel="noopener noreferrer"。公開 repo 是 uta-note-web。 -->
+<!-- 關於與下載（v0.13.8）：連結是固定常數，不是使用者輸入；外連一律 rel="noopener noreferrer"。公開 repo 是 uta-note-web。
+     v0.13.9：打軸工具下載用 Releases 的搜尋（?q=auto-timing，比對打軸工具的 tag 前綴）只列打軸工具；
+     版本紀錄列全部 Release，app 的版本設成 Latest 排最上面（見 docs/public-release-checklist.md）。 -->
 <div id="aboutDialog" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
   <div class="bg-white p-5 w-[24rem] max-w-[92vw] shadow-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="aboutDialogTitle">
     <p id="aboutDialogTitle" class="font-serif-jp text-lg font-bold mb-3">關於 日文歌練習室</p>
@@ -1908,7 +1910,7 @@ body.practice-view #addSongBtn{ display:none; }
       <p>原作者：北極狐<br><span class="text-xs text-[color:var(--muted)]">授權：PolyForm Noncommercial 1.0.0（禁止商業使用）</span></p>
       <ul class="list-disc pl-5 space-y-1">
         <li><a href="https://github.com/ArcticFox-ArcticFox/uta-note-web" target="_blank" rel="noopener noreferrer" class="text-[color:var(--accent)] underline underline-offset-2">原始碼（GitHub）↗</a></li>
-        <li><a href="https://github.com/ArcticFox-ArcticFox/uta-note-web/releases" target="_blank" rel="noopener noreferrer" class="text-[color:var(--accent)] underline underline-offset-2">打軸工具下載（Mac／Windows）↗</a></li>
+        <li><a href="https://github.com/ArcticFox-ArcticFox/uta-note-web/releases?q=auto-timing" target="_blank" rel="noopener noreferrer" class="text-[color:var(--accent)] underline underline-offset-2">打軸工具下載（Mac／Windows）↗</a></li>
         <li><a href="https://github.com/ArcticFox-ArcticFox/uta-note-web/releases" target="_blank" rel="noopener noreferrer" class="text-[color:var(--accent)] underline underline-offset-2">版本紀錄 ↗</a></li>
       </ul>
     </div>
