@@ -23,6 +23,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="日文歌練習室">
 <meta name="theme-color" content="#FBF8F1">
+<!-- 深淺色（v1.1.0）：在樣式套用前先設好 <html data-theme>，深色使用者開頁時不會先閃一下淺色。
+     鍵名與選項跟 js/state/store.js 的 THEME_KEY／THEMES 一致，之後由 app.js applyTheme() 接手 -->
+<script>
+(function () {
+  var t = 'light';
+  try { t = localStorage.getItem('utaNoteTheme_v1') || 'light'; } catch (e) {}
+  if (t === 'system') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+})();
+</script>
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADgUlEQVR4nOWXeUgUURzHvzuzHrjY2m5ZakGR2aVRtq5WFuV6IFpmIV1k5dFmh0Zhl9dKFHSfpkQRQtEfakpFVhSBnUhagdR2aVRGUQa74pauOxPvkbFt07rqbBJ9YJiZ937zft/35v1+7z2J+ZuBRz/CoJ+RChWWLkh0irPlFZX2BZT+cCxkKAZC7TOOqBQLobYZa3XOdG4twvoXM2I1zPM8LBZLj79jeuvQbDYjXbsG12/cpO+fPn3GrIgY7N13sO9R0AXHcchYm4XOzk7YYjQY8OLlK9TXP0LR0UMYMMATra2tCAoKhGgCGIbB3t27wLIsZDIPWtbc/B5+fr5YlpyC1do0rNam0/KLly7DxcUFM8KniyeAQHqmzViP4cP84OXlhZOnTmNNxirYotfroQ5R/RRaXX0VEZrZcHN1RZ8EUHgeKtUUqFTBVEBqygrcunUH1ty7XwuT6StS0zPAWSx4+OgxgssnoaT4KFztiJCiF3RaLLBeQN68eYuWli+4UFUGuVyOzy0t9BdptWn0t9hD6ohDD5kHzpw9h7Ly85ifmAApy9IoIBeZoBWVVdi2NRvHikoQFqbGhw8fcWD/HowbO6bbtqX2KuvqH8JoMGJufNwv5TU1tzEvYQ4aGp5AExWLaVPDsCFzHbZtz6P1K1ckw9fXp+95QKEYCOUgJXjwGDLEG97eg2mokefde/ZTJ8VFR7AqPRVtbW00GSmVSoedE+yOwMgRI2guCAkNR2DgBLS3t0Ovf4bN2RtpvY/PUIwfP44+NzY20TsRImomZBiGplhdQQ62bN4EmUyGRQuTfrN719xMQ7a9o0MwcfVagC0SiYSKsuXp02cIVYfASy5HXV09HEXqqGFuXiHtGccJLzh37t5D8rKlMHd00KwYGqoWZwQ4jqP3nTt0KCzIRVSk5jcbMi8MBgNmz5qJiRODUH3lGp4/fyGOAJ7nkZW5luZ/hUKB3JytNOMRyBpBBJIVsCA/h74TO3//UcjX7YDR2Np3ASzL0rgmGa3p9Wvk5OoQGR1L6wICRuPQ4WNISlqA4MmTfn6zZPFCOirLV6Z1GxVS9AAyych1vPgEJBKgtvYBZs4Ip2uENfFxsXB3d0OkJoJ2QDQBXZDVkISmyWSCp6cnbCFOY6Kj4NQdEcuygs7/uYMJ86fdqrOw3X0zQgbOdG6LROhw+jePZpL//nT8Ha08Sd1+vda5AAAAAElFTkSuQmCC">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 
@@ -211,6 +221,14 @@
   --accent:var(--color-accent);         /* 主要互動色（連結、主要按鈕） */
   --accent-deep:#1F3A55;                /* 互動色的 hover／deep 版本（專案特有，令牌沒有對應） */
   --seal:var(--color-danger);           /* 危險操作色（刪除），呼應印章紅 */
+  --pending-bg:#fff4e8;                 /* 打軸「下一句」、LRC 對照表沒配到的列（原本寫死在 layout.css／lrc-dialog.js） */
+}
+
+/* 深色（v1.1.0）：令牌的深色值由 tokens.css 的 :root[data-theme="dark"] 提供（app.js applyTheme() 一律把
+   data-theme 設成 light 或 dark，所以只寫這一種選擇器）。這裡只補專案自己的名稱；印章紅在深色改用令牌的 danger。 */
+:root[data-theme="dark"]{
+  --accent-deep:var(--color-accent-hover);
+  --pending-bg:var(--color-warning-soft);
 }
 
 /* ==========================================================================
@@ -292,7 +310,7 @@ rt{
   box-shadow:inset 4px 0 0 var(--accent), inset 0 0 0 999px rgba(44,74,110,0.10);
 }
 .lyric-line.is-past{ opacity:.55; }
-.lyric-line.tap-next{ outline:2px dashed var(--seal); background-color:#fff4e8 !important; }
+.lyric-line.tap-next{ outline:2px dashed var(--seal); background-color:var(--pending-bg) !important; }
 /* ==========================================================================
    分色顯示（底色／文字色，v0.4.7）
    preview.js 只在行／區塊上設 --role-color；這裡依 <body class="color-text"> 決定畫法。
@@ -303,7 +321,7 @@ rt{
    練習區工具列下拉選單（v0.5.0，見 index.html #practiceToolbar／components/tool-menu.js）
    ========================================================================== */
 .tool-menu-btn{
-  font-size:12px; padding:6px 12px; border:1px solid var(--line); background:#fff;
+  font-size:12px; padding:6px 12px; border:1px solid var(--line); background:var(--color-surface);
   color:var(--accent); white-space:nowrap; cursor:pointer;
 }
 .tool-menu-btn:hover{ background:var(--paper-deep); }
@@ -311,7 +329,7 @@ rt{
 .tool-caret{ font-size:10px; }
 .tool-menu{
   position:absolute; left:0; top:calc(100% + 4px); z-index:30; min-width:210px;
-  background:#fff; border:1px solid var(--line); box-shadow:0 4px 14px rgba(0,0,0,.14);
+  background:var(--color-surface); border:1px solid var(--line); box-shadow:0 4px 14px rgba(0,0,0,.14);
   padding:12px 16px; display:flex; flex-direction:column; gap:10px; font-size:12px;
 }
 .tool-menu.hidden{ display:none; }
@@ -326,16 +344,16 @@ rt{
 #practiceHeaderTools:not(:has(> :not(.hidden))){ display:none; }
 /* 頁尾「音檔」下拉 */
 .media-select{
-  font-size:12px; padding:5px 8px; border:1px solid var(--line); background:#fff; color:var(--accent);
+  font-size:12px; padding:5px 8px; border:1px solid var(--line); background:var(--color-surface); color:var(--accent);
   max-width:12em; text-overflow:ellipsis;
 }
 
 /* 混音鈕（components/mix-toggle.js，docs/features/stems.md）：麥克風鈕＝播原曲（藍底）／無人聲版本（白底斜線），旁邊的小按鈕開「選擇無人聲版本」 */
 .mix-btn{ flex:none; display:inline-flex; align-items:center; justify-content:center; width:36px; height:32px; cursor:pointer; border:1px solid var(--accent); }
-.mix-btn.mix-on{ background:var(--accent); color:#fff; }
-.mix-btn.mix-off{ background:#fff; color:var(--muted); border-color:var(--line); }
+.mix-btn.mix-on{ background:var(--accent); color:var(--color-on-accent); }
+.mix-btn.mix-off{ background:var(--color-surface); color:var(--muted); border-color:var(--line); }
 .mix-btn.mix-loading{ opacity:.55; cursor:progress; }
-.mix-pick{ flex:none; padding:6px 8px; border:1px solid var(--line); background:#fff; color:var(--accent); cursor:pointer; white-space:nowrap; }
+.mix-pick{ flex:none; padding:6px 8px; border:1px solid var(--line); background:var(--color-surface); color:var(--accent); cursor:pointer; white-space:nowrap; }
 .mix-pick .mix-caret{ font-size:10px; }
 /* 手機（≤768px）頁尾只留麥克風鈕：不留音檔下拉（#audioSourceWrap）與「選擇無人聲版本」，空間留給播放條；
    換版本改到「歌單／歌號」分頁按該行的「播放」；手機一律用自動找到的版本 */
@@ -498,18 +516,18 @@ body.color-text #lyricsArea .lyric-line.is-current{
 /* 分色選單的「多人同唱」勾選模式（preview.js openColorPopover） */
 .color-popover .pop-more{ border-top:1px solid var(--line); color:var(--accent); }
 .color-popover .pop-cb{
-  display:inline-flex; width:15px; height:15px; border:1.5px solid #8a8070; border-radius:3px; background:#fff;
-  align-items:center; justify-content:center; font-size:11px; line-height:1; color:#fff; flex-shrink:0;
+  display:inline-flex; width:15px; height:15px; border:1.5px solid #8a8070; border-radius:3px; background:var(--color-surface);
+  align-items:center; justify-content:center; font-size:11px; line-height:1; color:var(--color-on-accent); flex-shrink:0;
 }
 .color-popover .pop-cb.on{ background:var(--accent); border-color:var(--accent); }
 /* 底部按鈕列用 sticky 貼在選單底部：選單被限高而內部捲動時，「套用」永遠看得到 */
 .color-popover .pop-foot{
-  position:sticky; bottom:0; border-top:1px solid var(--line); background:#faf7ef; padding:6px 8px;
+  position:sticky; bottom:0; border-top:1px solid var(--line); background:var(--paper); padding:6px 8px;
 }
 .color-popover .pop-hint{ font-size:11px; color:var(--muted); margin-bottom:6px; }
 .color-popover .pop-acts{ display:flex; gap:6px; }
-.color-popover .pop-acts button{ width:auto; padding:5px 12px; border:1px solid var(--line); background:#fff; }
-.color-popover .pop-acts .pop-ok{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.color-popover .pop-acts button{ width:auto; padding:5px 12px; border:1px solid var(--line); background:var(--color-surface); }
+.color-popover .pop-acts .pop-ok{ background:var(--accent); color:var(--color-on-accent); border-color:var(--accent); }
 .color-popover .pop-acts .pop-ok:disabled{ opacity:.4; cursor:not-allowed; }
 .color-popover .pop-acts .pop-clear{ margin-left:auto; color:var(--seal); }
 .color-dot{
@@ -521,7 +539,7 @@ body.color-text #lyricsArea .lyric-line.is-current{
 }
 .color-popover{
   position:absolute;
-  background:#fff;
+  background:var(--color-surface);
   border:1px solid var(--line);
   box-shadow:0 6px 20px rgba(0,0,0,0.12);
   z-index:40;
@@ -536,7 +554,7 @@ body.color-text #lyricsArea .lyric-line.is-current{
   padding:7px 10px;
   font-size:12px;
 }
-.color-popover button:hover{ background:#F4EFE2; }
+.color-popover button:hover{ background:var(--paper-deep); }
 /* v0.1.8：「清空…」選單共用 .color-popover 外觀，歌單是空的時選項 disabled */
 .color-popover button:disabled{ opacity:0.4; cursor:not-allowed; background:transparent; }
 #clearSongsMenu button{ white-space:nowrap; }
@@ -546,7 +564,7 @@ body.color-text #lyricsArea .lyric-line.is-current{
 .song-item.active{ background:var(--paper-deep); border-left-color:var(--accent); }
 
 input[type=text], textarea{
-  background:#fff;
+  background:var(--color-surface);
 }
 input[type=text]:focus, textarea:focus, input[type=url]:focus{
   outline:none;
@@ -581,7 +599,7 @@ input[type=text]:focus, textarea:focus, input[type=url]:focus{
 }
 .tab-btn:not(:last-child){ border-right:none; } /* v0.7.0：分頁從兩個變三個，改成「除了最後一個都不畫右框線」，相鄰兩個才不會出現雙線 */
 .tab-btn.active{
-  color:#fff;
+  color:var(--color-on-accent);
   background:var(--accent);
   border-color:var(--accent);
   font-weight:700;
@@ -631,8 +649,10 @@ input[type=text]:focus, textarea:focus, input[type=url]:focus{
   transition:background-color .15s ease, color .15s ease;
 }
 .lyrics-size-btn:not(:last-child){ border-right:none; }
+/* 深淺色（v1.1.0）三個選項，「跟隨系統」四個字不能被選單寬度擠成直排 */
+.theme-group .lyrics-size-btn{ white-space:nowrap; padding:4px 10px; }
 .lyrics-size-btn.active{
-  color:#fff;
+  color:var(--color-on-accent);
   background:var(--accent);
   border-color:var(--accent);
   font-weight:700;
@@ -798,7 +818,7 @@ html body.h-screen{ height:100vh; height:100dvh; }
 .pq-status.is-ok{ color:var(--accent); }
 .pq-act{
   width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center;
-  font-size:11px; line-height:1; color:var(--muted); background:#fff; border:1px solid var(--line); cursor:pointer;
+  font-size:11px; line-height:1; color:var(--muted); background:var(--color-surface); border:1px solid var(--line); cursor:pointer;
 }
 .pq-act:disabled{ opacity:.35; cursor:default; }
 .pq-act.is-remove{ color:var(--seal); }
@@ -866,13 +886,13 @@ body.practice-view #addSongBtn{ display:none; }
 .tag-more{ font-size:10px; color:var(--muted); padding:3px 2px; }
 
 /* 篩選面板（電腦版：浮在「標籤」按鈕正下方；手機版改成底部升起，見檔尾 media） */
-.tf-btn{ width:100%; display:flex; justify-content:space-between; align-items:center; background:#fff;
+.tf-btn{ width:100%; display:flex; justify-content:space-between; align-items:center; background:var(--color-surface);
          border:1px solid var(--line); padding:6px 8px; font-size:14px; color:var(--ink); }
 .tf-btn b{ font-weight:500; color:var(--accent); font-size:12px; }
 .tf-btn-right{ display:inline-flex; align-items:center; gap:8px; }
 .tf-chev{ color:var(--ink); flex:none; transition:transform .15s; }
 .tf-btn[aria-expanded="true"] .tf-chev{ transform:rotate(180deg); }
-.tf-panel{ position:absolute; left:0; right:0; top:100%; z-index:30; margin-top:2px; background:#fff;
+.tf-panel{ position:absolute; left:0; right:0; top:100%; z-index:30; margin-top:2px; background:var(--color-surface);
            border:1px solid var(--line); box-shadow:0 6px 16px rgba(0,0,0,.12); max-height:min(60dvh,420px); overflow-y:auto; }
 .tf-scrim{ display:none; }
 .tf-sheet-head{ display:none; }
@@ -881,13 +901,13 @@ body.practice-view #addSongBtn{ display:none; }
 .tf-group:first-of-type{ border-top:0; }
 .tf-head{ font-size:11px; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between; gap:8px; }
 .tf-chips{ display:flex; flex-wrap:wrap; gap:6px; }
-.chip{ font-size:12px; padding:4px 9px; border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:2px; cursor:pointer; }
+.chip{ font-size:12px; padding:4px 9px; border:1px solid var(--line); background:var(--color-surface); color:var(--ink); border-radius:2px; cursor:pointer; }
 .chip small{ color:var(--muted); margin-left:3px; font-size:10px; }
 .chip.on{ background:var(--tc); border-color:var(--tc); color:#fff; }
 .chip.on small{ color:rgba(255,255,255,.8); }
 .tf-foot{ display:flex; justify-content:space-between; gap:8px; padding:8px 10px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); }
 .tf-artist-chosen{ margin-bottom:6px; }
-.tf-artist-search{ width:100%; box-sizing:border-box; border:1px solid var(--line); padding:5px 8px; font-size:13px; background:#fff; color:var(--ink); }
+.tf-artist-search{ width:100%; box-sizing:border-box; border:1px solid var(--line); padding:5px 8px; font-size:13px; background:var(--color-surface); color:var(--ink); }
 .tf-artist-results{ margin-top:6px; }
 .tf-artist-note{ font-size:11px; color:var(--muted); }
 .tf-clear{ color:var(--accent); text-decoration:underline; cursor:pointer; background:none; border:0; padding:0; font-size:12px; }
@@ -896,13 +916,13 @@ body.practice-view #addSongBtn{ display:none; }
 
 /* 編輯區的標籤列 */
 .tag-row{ position:relative; display:flex; gap:4px; align-items:center; }
-.tag-row input{ border:1px solid var(--line); padding:6px 8px; font-size:14px; min-width:0; background:#fff; }
+.tag-row input{ border:1px solid var(--line); padding:6px 8px; font-size:14px; min-width:0; background:var(--color-surface); }
 .tag-row input.tag-cat{ width:38%; flex:none; }
 .tag-row input.tag-val{ flex:1; }
 .tag-row input.tag-invalid{ border-color:var(--seal); }
 .tag-row .tag-del{ flex:none; width:24px; text-align:center; font-size:14px; color:var(--muted); background:none; border:0; }
 .tag-row .tag-del:disabled{ opacity:.25; cursor:default; }
-.tag-suggest{ position:absolute; top:100%; z-index:20; background:#fff; border:1px solid var(--line);
+.tag-suggest{ position:absolute; top:100%; z-index:20; background:var(--color-surface); border:1px solid var(--line);
               box-shadow:0 4px 12px rgba(0,0,0,.08); font-size:13px; max-height:180px; overflow-y:auto; }
 .tag-suggest div{ padding:6px 8px; display:flex; justify-content:space-between; gap:8px; cursor:pointer; }
 .tag-suggest div.hl{ background:var(--paper-deep); }
@@ -946,7 +966,7 @@ body.practice-view #addSongBtn{ display:none; }
 
 /* 連播被擋住時的浮動提示條（practice-queue.js showTapBanner） */
 .pq-tap-banner{ position:fixed; left:12px; right:12px; top:12px; z-index:9999; padding:10px 14px; border-radius:10px;
-  background:var(--seal,#b3322f); color:#fff; font-size:14px; line-height:1.4; text-align:center; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+  background:var(--seal,#b3322f); color:var(--color-on-accent); font-size:14px; line-height:1.4; text-align:center; box-shadow:0 4px 14px rgba(0,0,0,.25); }
 
 /* ==========================================================================
    觸控點擊範圍（2026-10-28 設計檢驗，見 HISTORY.md#touch-target-history）
@@ -970,6 +990,48 @@ body.practice-view #addSongBtn{ display:none; }
   /* 歌庫清單每列右側的小圖示（釘選 12×14、加入練習歌單 19×19、許願歌單的「移到我的歌庫」）。
      內距 8px＋負外距 4px：可點範圍約 28～35px，占的版面只多約 12px，不擠掉歌名。 */
   .song-item .ml-2.flex > button{ padding:8px; margin:-4px; }
+}
+
+/* 分頁列與匯入／匯出／清空之間的短分隔線（v1.1.0）：左右大約對齊「匯入」字的左緣到「清空…」字的右緣
+   （按鈕三等分、字置中，用百分比在電腦 280px 與手機的側欄寬度都對得上）；靠近下面那排，因為下排沒有框線 */
+.sidebar-divider{ flex:none; height:2px; background:var(--line); margin:16px 12% 0 14%; }
+/* 側欄分頁列與匯入／匯出／清空（v1.1.0）：手機上兩排都至少 44px 高，手指好按 */
+@media (max-width:768px){
+  .tab-btn, .sidebar-act{ min-height:var(--touch-min); }
+}
+
+/* ==========================================================================
+   深色模式（v1.1.0，「顯示」選單的深淺色；app.js applyTheme()）
+   淺色的規則一律不動，這裡只蓋掉深色時看不清楚的地方：寫死的淺色值（照抄原檔案的 body 底色、捲軸）、
+   用深藍半透明疊出來的高亮（深色底上看不到）、使用者自選的角色色。PDF 匯出在複本上切回淺色，不受這裡影響。
+   ========================================================================== */
+:root[data-theme="dark"] body{ background-color:var(--color-bg); }
+:root[data-theme="dark"] :is(#songList, #lyricsArea)::-webkit-scrollbar-thumb{ background:var(--color-border-strong); }
+:root[data-theme="dark"] .lyric-line.is-current{
+  box-shadow:inset 4px 0 0 var(--accent), inset 0 0 0 999px color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+:root[data-theme="dark"] body.color-text #lyricsArea .lyric-line.is-current{
+  box-shadow:inset 4px 0 0 var(--accent), inset 0 0 0 999px color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+:root[data-theme="dark"] body:not(.color-text) #lyricsArea .lyric-line.is-current{ box-shadow:inset 4px 0 0 var(--accent); }
+:root[data-theme="dark"] body:not(.color-text) :is(#lyricsArea, .video-window-lyrics) .lyric-line.is-current .lyric-segment,
+:root[data-theme="dark"] body:not(.color-text) :is(#lyricsArea, .video-window-lyrics) .lyric-line.is-current:not(.multi-segment){
+  background-color:color-mix(in srgb, var(--role-color, var(--color-accent)) var(--role-a), transparent);
+}
+:root[data-theme="dark"] .lyric-token:hover{ background:color-mix(in srgb, var(--color-accent) 18%, transparent); }
+:root[data-theme="dark"] .lyric-token.is-plain:hover{ background:color-mix(in srgb, var(--color-accent) 12%, transparent); }
+/* 角色色：使用者挑的多半是中深色（預設色盤、印章紅），在深色底上當字色太暗，畫面上混入白色調亮；
+   存的顏色不變（CSV、PDF 照舊）。底色模式只是半透明疊色，字本身是淺色，不用調。 */
+:root[data-theme="dark"] body.color-text :is(#lyricsArea, .video-window-lyrics) :is(.lyric-line:not(.multi-segment), .lyric-segment){
+  color:color-mix(in oklab, var(--role-color, var(--ink)) 60%, white);
+}
+:root[data-theme="dark"] body.color-text :is(#lyricsArea, .video-window-lyrics) .multi-role .role-g{ filter:brightness(1.6); }
+:root[data-theme="dark"] body.color-text :is(#lyricsArea, .video-window-lyrics) .multi-role .role-g rt{
+  -webkit-text-fill-color:color-mix(in oklab, var(--role-color) 60%, white);
+}
+:root[data-theme="dark"] .sync-toast{ background:var(--color-surface-2); color:var(--color-text); border:1px solid var(--color-border); }
+@media (max-width:768px){
+  :root[data-theme="dark"] .tf-panel{ background:var(--color-surface); }
 }
 
 /* ==========================================================================
@@ -1259,7 +1321,7 @@ body.practice-view #addSongBtn{ display:none; }
   font-size:12px;
   padding:5px 10px;
   border:1px solid var(--line);
-  background:#fff;
+  background:var(--color-surface);
   color:var(--muted);
   cursor:pointer;
   transition:background-color 0.15s ease;
@@ -1277,7 +1339,7 @@ body.practice-view #addSongBtn{ display:none; }
 
 .tour-btn-next{
   border-color:var(--accent);
-  color:#fff;
+  color:var(--color-on-accent);
   background:var(--accent);
 }
 
@@ -1360,7 +1422,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
 .video-window.size-large .strip-current{ font-size:19px; }
 .video-window.size-large .strip-next{ font-size:14px; }
 .video-window-lyrics.furigana-hidden rt{ visibility:hidden; }
-.video-window-btn.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.video-window-btn.on{ background:var(--accent); color:var(--color-on-accent); border-color:var(--accent); }
 .video-window-lyrics .strip-line .lyric-segment{ display:inline-flex; margin:0 2px; padding:1px 8px; gap:0; }
 
 /* 歌詞條是從主歌詞區複製來的，複製的字還帶著 .lyric-token（滑鼠移上去／點到會反灰、游標變手指，是主歌詞區「點字改假名」的樣式）。
@@ -1393,7 +1455,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 1.0.0</span>
+        <span class="tabular-nums">V 1.1.0</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -1414,19 +1476,22 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
 
     <!-- ---- 歌單面板（我的歌庫／許願歌單共用同一套 UI，只是資料來源不同） ---- -->
     <div id="libraryPanel" class="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <div class="px-3 pt-3 flex gap-2">
+      <!-- 匯入／匯出／清空（v1.1.0 改樣式）：沒有外框、強調色字，跟上面的分頁列（相連、選中填色）明顯分開，看得出是「動作」不是第三排分頁；
+           上方一條短分隔線（使用者從三種方案選的），樣式見 css/layout.css .sidebar-divider -->
+      <div class="sidebar-divider" aria-hidden="true"></div>
+      <div class="px-3 pt-1 flex gap-2">
         <button id="importSongsBtn"
-          class="flex-1 text-xs py-2 border border-[color:var(--line)] text-[color:var(--muted)] hover:bg-[color:var(--paper-deep)] transition-colors">
+          class="sidebar-act flex-1 text-[13px] py-2 text-[color:var(--accent)] hover:bg-[color:var(--paper-deep)] transition-colors">
           匯入
         </button>
         <button id="exportSongsBtn"
-          class="flex-1 text-xs py-2 border border-[color:var(--line)] text-[color:var(--muted)] hover:bg-[color:var(--paper-deep)] transition-colors">
+          class="sidebar-act flex-1 text-[13px] py-2 text-[color:var(--accent)] hover:bg-[color:var(--paper-deep)] transition-colors">
           匯出
         </button>
         <!-- v0.1.8 新增（原檔案沒有）：清空目前歌單／所有歌單，選單項目文字含首數，由 app.js bindClearSongsMenu() 填 -->
         <div class="flex-1 relative">
           <button id="clearSongsBtn"
-            class="w-full text-xs py-2 border border-[color:var(--line)] text-[color:var(--seal)] hover:bg-[color:var(--paper-deep)] transition-colors">
+            class="sidebar-act w-full text-[13px] py-2 text-[color:var(--seal)] hover:bg-[color:var(--paper-deep)] transition-colors">
             清空…
           </button>
           <div id="clearSongsMenu" class="color-popover hidden" style="right:0; top:calc(100% + 4px);">
@@ -1439,7 +1504,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
 
       <div class="px-3 pt-3">
         <button id="addSongBtn"
-          class="w-full text-sm py-2 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white transition-colors">
+          class="w-full text-sm py-2 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-[color:var(--color-on-accent)] transition-colors">
           ＋ 新增歌曲
         </button>
       </div>
@@ -1461,7 +1526,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         <div class="flex items-center justify-between gap-2 pb-1">
           <p id="detailFormStatusText" class="text-xs text-[color:var(--muted)] flex-1"></p>
           <button id="editSongBtn" type="button"
-            class="shrink-0 text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white transition-colors">
+            class="shrink-0 text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-[color:var(--color-on-accent)] transition-colors">
             編輯
           </button>
         </div>
@@ -1501,7 +1566,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
           <input id="audioFileInput" type="file" accept=".mp3,.wav,.m4a,.flac,audio/*" class="hidden">
           <!-- 只有雙擊開啟（file://）才會顯示（components/player.js）：選一次音樂資料夾，這次開啟期間所有歌都能直接播 -->
           <div id="audioPickFolderRow" class="mt-1 hidden">
-            <button id="audioPickFolderBtn" type="button" class="text-xs px-2 py-1 border border-[color:var(--accent)] text-[color:var(--accent)] bg-white">選擇音樂資料夾…</button>
+            <button id="audioPickFolderBtn" type="button" class="text-xs px-2 py-1 border border-[color:var(--accent)] text-[color:var(--accent)] bg-[color:var(--color-surface)]">選擇音樂資料夾…</button>
             <span id="audioPickFolderMeta" class="text-[10px] text-[color:var(--muted)]">雙擊開啟的網頁讀不到網頁以外的檔案；選一次資料夾，這次開啟期間所有歌都能直接播，也能自動找到伴奏。</span>
             <input id="audioFolderInput" type="file" webkitdirectory directory multiple class="hidden">
           </div>
@@ -1530,7 +1595,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
             class="w-full border border-[color:var(--line)] px-2 py-1.5 text-sm mt-1"></textarea>
         </div>
 
-        <button id="deleteSongBtn" class="w-full text-xs py-2 border border-[color:var(--seal)] text-[color:var(--seal)] hover:bg-[color:var(--seal)] hover:text-white transition-colors mt-2">
+        <button id="deleteSongBtn" class="w-full text-xs py-2 border border-[color:var(--seal)] text-[color:var(--seal)] hover:bg-[color:var(--seal)] hover:text-[color:var(--color-on-accent)] transition-colors mt-2">
           刪除此歌曲
         </button>
       </div>
@@ -1558,7 +1623,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       <!-- 歌手下拉＝快速單選（選一位＝只看那位）。v0.9.3 起跟標籤面板裡的「歌手」群組（搜尋找人、可複選）共用同一份篩選：
            面板選了多位時這裡顯示「已選 N 位」。 -->
       <select id="artistFilter"
-        class="w-full border border-[color:var(--line)] px-2 py-1.5 text-sm bg-white text-[color:var(--ink)]">
+        class="w-full border border-[color:var(--line)] px-2 py-1.5 text-sm bg-[color:var(--color-surface)] text-[color:var(--ink)]">
         <option value="">所有歌手</option>
       </select>
       <!-- v0.9.0 標籤篩選：同一顆按鈕也收了原本獨立的「Joysound／DAM 有收錄」來源下拉（面板裡的「機種」群組）；
@@ -1584,7 +1649,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <!-- 練習歌單分頁的控制列（v0.7.0，邏輯見 components/practice-queue.js）：取代搜尋／篩選，只在 #tabPracticeBtn 分頁顯示 -->
     <div id="practiceQueueBar" class="hidden px-3 pt-3 space-y-2">
       <button id="pqPlayBtn" type="button"
-        class="w-full text-sm py-2 border border-[color:var(--accent)] bg-[color:var(--accent)] text-white font-bold transition-opacity">▶ 全部播放</button>
+        class="w-full text-sm py-2 border border-[color:var(--accent)] bg-[color:var(--accent)] text-[color:var(--color-on-accent)] font-bold transition-opacity">▶ 全部播放</button>
       <!-- 播放模式：「隨機」「循環」（v0.7.1）、「間歇」（v0.8.0）是三個獨立開關，淺底色＝沒按（不隨機、不循環、不間歇），按下去變深色。
            都沒按＝依清單順序播到最後一首就停，每首之間自動接著播。手機頁尾（#pqFootMode）只放前兩顆，使用者決定不加「間歇」。 -->
       <div id="pqModeGroup" class="lyrics-size-group" role="group" aria-label="播放模式">
@@ -1676,6 +1741,15 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
                 <button type="button" class="lyrics-size-btn" data-color-mode="text">文字色</button>
               </span>
             </span>
+            <!-- 深淺色（v1.1.0）：只記在這台裝置；套用方式見 app.js applyTheme()，顏色值在 css/tokens.css -->
+            <span class="tool-menu-row">
+              <span class="tool-menu-label">深淺色</span>
+              <span id="themeGroup" class="lyrics-size-group theme-group">
+                <button type="button" class="lyrics-size-btn" data-theme-pref="system">跟隨系統</button>
+                <button type="button" class="lyrics-size-btn active" data-theme-pref="light">淺色</button>
+                <button type="button" class="lyrics-size-btn" data-theme-pref="dark">深色</button>
+              </span>
+            </span>
             <!-- 混音鈕（頁尾的麥克風鈕）顯示／隱藏：隱藏時不檢查有沒有對應版本、不載入任何東西；手機也靠這裡開關（手機只有「顯示」選單） -->
             <span class="tool-menu-row">
               <span class="tool-menu-label">混音鈕</span>
@@ -1744,7 +1818,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
             <b>● 打軸中</b>
             <span id="syncTapHint" style="color:var(--muted)"></span>
             <span class="flex-1"></span>
-            <button type="button" id="syncStampBtn" class="px-4 py-1.5 text-sm text-white" style="background:var(--seal)">● 打點　空白鍵</button>
+            <button type="button" id="syncStampBtn" class="px-4 py-1.5 text-sm text-[color:var(--color-on-accent)]" style="background:var(--seal)">● 打點　空白鍵</button>
             <span class="lyrics-size-group">
               <button type="button" class="lyrics-size-btn" id="syncPrevBtn">← 上一行</button>
               <button type="button" class="lyrics-size-btn" id="syncDoneBtn">完成</button>
@@ -1780,8 +1854,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
           </p>
           <textarea id="lyricsRawInput" rows="8" class="w-full border border-[color:var(--line)] p-2 text-sm font-mono leading-relaxed"></textarea>
           <div class="mt-2 flex gap-2">
-            <button id="autoFuriganaBtn" type="button" class="text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white transition-colors">自動標注假名</button>
-            <button id="applyLyricsBtn" class="text-xs px-3 py-1.5 bg-[color:var(--accent)] text-white">套用（覆蓋目前歌詞）</button>
+            <button id="autoFuriganaBtn" type="button" class="text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-[color:var(--color-on-accent)] transition-colors">自動標注假名</button>
+            <button id="applyLyricsBtn" class="text-xs px-3 py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]">套用（覆蓋目前歌詞）</button>
             <button id="cancelImportBtn" class="text-xs px-3 py-1.5 border border-[color:var(--line)]">取消</button>
           </div>
           <p class="text-xs text-[color:var(--muted)] mt-1">
@@ -1807,8 +1881,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
                手機上這一列獨占一行（目前第幾首＋播放模式），⏮⏭ 留在音檔條兩側。 -->
           <div id="pqNowRow" class="items-center gap-2 text-xs text-[color:var(--accent-deep)]">
             <span id="pqNowLabel" class="whitespace-nowrap">練習歌單</span>
-            <button id="pqPrevBtn" type="button" class="pq-nav-btn text-xs px-2 py-1.5 border border-[color:var(--line)] text-[color:var(--accent)] bg-white" title="上一首（唱超過 3 秒會先回到這首開頭）">⏮</button>
-            <button id="pqNextBtn" type="button" class="pq-nav-btn text-xs px-2 py-1.5 border border-[color:var(--line)] text-[color:var(--accent)] bg-white disabled:opacity-40" title="下一首">⏭</button>
+            <button id="pqPrevBtn" type="button" class="pq-nav-btn text-xs px-2 py-1.5 border border-[color:var(--line)] text-[color:var(--accent)] bg-[color:var(--color-surface)]" title="上一首（唱超過 3 秒會先回到這首開頭）">⏮</button>
+            <button id="pqNextBtn" type="button" class="pq-nav-btn text-xs px-2 py-1.5 border border-[color:var(--line)] text-[color:var(--accent)] bg-[color:var(--color-surface)] disabled:opacity-40" title="下一首">⏭</button>
             <!-- 手機才顯示的播放模式（手機瀏覽模式看不到清單上方那排），跟 #pqModeGroup 同一組兩個開關 -->
             <span id="pqFootMode" class="lyrics-size-group" role="group" aria-label="播放模式">
               <button type="button" class="lyrics-size-btn" data-toggle="shuffle" aria-pressed="false" title="隨機">隨機</button>
@@ -1847,21 +1921,21 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
 
 <!-- 假名修改 Modal：點擊練習區任一字詞開啟，開合／儲存邏輯見 preview.js openFuriganaModal()。 -->
 <div id="furiganaModal" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-  <div class="bg-white p-5 w-80 shadow-lg">
+  <div class="bg-[color:var(--color-surface)] p-5 w-80 shadow-lg">
     <p class="text-xs text-[color:var(--muted)] mb-1">文字</p>
     <p id="modalTokenText" class="font-serif-jp text-2xl mb-3"></p>
     <label class="text-xs text-[color:var(--muted)]">假名標註（フリガナ）</label>
     <input id="modalFuriganaInput" type="text" class="w-full border border-[color:var(--line)] px-2 py-1.5 mt-1 text-sm" placeholder="留空表示不標註">
     <div class="mt-4 flex justify-end gap-2">
       <button id="modalCancelBtn" class="text-xs px-3 py-1.5 border border-[color:var(--line)]">取消</button>
-      <button id="modalSaveBtn" class="text-xs px-3 py-1.5 bg-[color:var(--accent)] text-white">儲存</button>
+      <button id="modalSaveBtn" class="text-xs px-3 py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]">儲存</button>
     </div>
   </div>
 </div>
 
 <!-- 合唱角色管理 Modal：「編輯角色」開啟，改色／改名／新增／刪除邏輯見 preview.js renderRolesList()。 -->
 <div id="rolesModal" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-  <div class="bg-white p-5 w-96 max-w-[90vw] shadow-lg max-h-[80vh] flex flex-col">
+  <div class="bg-[color:var(--color-surface)] p-5 w-96 max-w-[90vw] shadow-lg max-h-[80vh] flex flex-col">
     <div class="flex items-center justify-between mb-3 shrink-0">
       <p class="font-serif-jp text-lg font-bold">編輯合唱角色</p>
       <button id="rolesModalCloseBtn" class="text-sm text-[color:var(--muted)] hover:text-[color:var(--ink)]">✕</button>
@@ -1869,7 +1943,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <p class="text-xs text-[color:var(--muted)] mb-3 shrink-0">可自由編輯每個角色的顏色與名稱，或新增／刪除角色（人數不限）。此設定僅套用於目前選取的這首歌。</p>
     <div id="rolesList" class="space-y-2 overflow-y-auto"></div>
     <button id="addRoleBtn"
-      class="w-full text-sm py-2 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white transition-colors mt-3 shrink-0">
+      class="w-full text-sm py-2 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-[color:var(--color-on-accent)] transition-colors mt-3 shrink-0">
       ＋ 新增角色
     </button>
   </div>
@@ -1878,7 +1952,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
 <!-- 匯入 LRC 時間軸對話框（v0.4.0 新增）：貼上或選檔 → 預覽 LRC 與歌詞行的對應 → 確認後才套用。
      內容由 components/lrc-dialog.js 填入。只取時間，不儲存 LRC 裡的歌詞文字。 -->
 <div id="lrcDialog" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-  <div class="bg-white p-5 w-[48rem] max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="lrcDialogTitle">
+  <div class="bg-[color:var(--color-surface)] p-5 w-[48rem] max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="lrcDialogTitle">
     <p id="lrcDialogTitle" class="font-serif-jp text-lg font-bold mb-1">匯入 LRC 時間軸</p>
     <p class="text-xs text-[color:var(--muted)] mb-3">只取時間，不會儲存 LRC 裡的歌詞文字。確認對應沒問題再按「套用」。</p>
     <div class="flex gap-2 mb-2">
@@ -1900,7 +1974,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     </div>
     <div class="mt-4 flex justify-end gap-2">
       <button type="button" id="lrcCancelBtn" class="text-xs px-3 py-1.5 border border-[color:var(--line)]">取消</button>
-      <button type="button" id="lrcApplyBtn" class="text-xs px-3 py-1.5 bg-[color:var(--accent)] text-white">套用</button>
+      <button type="button" id="lrcApplyBtn" class="text-xs px-3 py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]">套用</button>
     </div>
   </div>
 </div>
@@ -1909,7 +1983,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
      v0.13.9：打軸工具下載用 Releases 的搜尋（?q=auto-timing，比對打軸工具的 tag 前綴）只列打軸工具；
      版本紀錄列全部 Release，app 的版本設成 Latest 排最上面（見 docs/public-release-checklist.md）。 -->
 <div id="aboutDialog" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-  <div class="bg-white p-5 w-[24rem] max-w-[92vw] shadow-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="aboutDialogTitle">
+  <div class="bg-[color:var(--color-surface)] p-5 w-[24rem] max-w-[92vw] shadow-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="aboutDialogTitle">
     <p id="aboutDialogTitle" class="font-serif-jp text-lg font-bold mb-3">關於 日文歌練習室</p>
     <div class="text-sm text-[color:var(--ink)] space-y-2">
       <p>原作者：北極狐<br><span class="text-xs text-[color:var(--muted)]">授權：PolyForm Noncommercial 1.0.0（禁止商業使用）</span></p>
@@ -1928,7 +2002,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
 <!-- 匯入對話框（v0.1.8 新增，原檔案沒有）：「附加／取代全部」與「重複歌曲逐首詢問」共用，
      內容與按鈕由 components/import-dialog.js 填入。 -->
 <div id="importDialog" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-  <div class="bg-white p-5 w-[26rem] max-w-[92vw] shadow-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="importDialogTitle">
+  <div class="bg-[color:var(--color-surface)] p-5 w-[26rem] max-w-[92vw] shadow-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="importDialogTitle">
     <p id="importDialogTitle" class="font-serif-jp text-lg font-bold mb-3"></p>
     <div id="importDialogBody" class="text-sm text-[color:var(--ink)]"></div>
     <label id="importDialogApplyRestRow" class="hidden mt-4 flex items-center gap-2 text-xs text-[color:var(--muted)] cursor-pointer">
@@ -2659,6 +2733,9 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var COLOR_MODE_KEY = "utaNoteColorMode_v1";
   var COLOR_MODES = ["bg", "text"];
   var COLOR_MODE_DEFAULT = "bg";
+  var THEME_KEY = "utaNoteTheme_v1";
+  var THEMES = ["system", "light", "dark"];
+  var THEME_DEFAULT = "light";
   var PRACTICE_MODE_KEY = "utaNotePracticeMode_v1";
   var AUDIO_DURATIONS_KEY = "utaNoteAudioDurations_v1";
   var PLAY_RESUME_KEY = "utaNotePlayResume_v1";
@@ -2867,6 +2944,21 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     if (!COLOR_MODES.includes(mode3)) return;
     try {
       localStorage.setItem(COLOR_MODE_KEY, mode3);
+    } catch {
+    }
+  }
+  function getTheme() {
+    try {
+      const raw = localStorage.getItem(THEME_KEY);
+      return THEMES.includes(raw) ? raw : THEME_DEFAULT;
+    } catch {
+      return THEME_DEFAULT;
+    }
+  }
+  function setTheme(theme) {
+    if (!THEMES.includes(theme)) return;
+    try {
+      localStorage.setItem(THEME_KEY, theme);
     } catch {
     }
   }
@@ -5312,7 +5404,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       });
       const delBtn = document.createElement("button");
       delBtn.textContent = "\u522A\u9664";
-      delBtn.className = "shrink-0 text-xs px-2 py-1.5 border border-[color:var(--seal)] text-[color:var(--seal)] hover:bg-[color:var(--seal)] hover:text-white transition-colors";
+      delBtn.className = "shrink-0 text-xs px-2 py-1.5 border border-[color:var(--seal)] text-[color:var(--seal)] hover:bg-[color:var(--seal)] hover:text-[color:var(--color-on-accent)] transition-colors";
       delBtn.addEventListener("click", () => {
         const ok = window.confirm(
           `\u78BA\u5B9A\u8981\u522A\u9664\u89D2\u8272\u300C${role.label || "\u672A\u547D\u540D\u89D2\u8272"}\u300D\u55CE\uFF1F\u6B4C\u8A5E\u4E2D\u5DF2\u6A19\u793A\u6B64\u89D2\u8272\u7684\u6A19\u8A18\u6587\u5B57\u5C07\u4E00\u4F75\u79FB\u9664\uFF0C\u9084\u539F\u6210\u4E00\u822C\u6B4C\u8A5E\u3002`
@@ -5449,7 +5541,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       btn.textContent = isActive ? mixing ? "\u25B6 \u6DF7\u97F3\u4E2D" : "\u25B6 \u64AD\u653E\u4E2D" : "\u64AD\u653E";
       btn.title = draftRows ? "\u6309\u300C\u5132\u5B58\u300D\u4E4B\u5F8C\u624D\u80FD\u64AD\u653E" : mixing ? "\u6B63\u5728\u64AD\u9019\u9996\u6B4C\u7684\u7121\u4EBA\u8072\u7248\u672C\uFF08\u9801\u5C3E\u7684\u9EA5\u514B\u98A8\u9215\uFF09\uFF0C\u4E0D\u662F\u9019\u500B\u6A94\u672C\u8EAB" : "";
       btn.disabled = !value || draftRows;
-      btn.className = "shrink-0 border px-2 py-1.5 text-xs " + (isActive ? "bg-[color:var(--accent)] text-white border-[color:var(--accent)]" : "text-[color:var(--accent)] border-[color:var(--line)] hover:bg-[color:var(--paper-deep)]");
+      btn.className = "shrink-0 border px-2 py-1.5 text-xs " + (isActive ? "bg-[color:var(--accent)] text-[color:var(--color-on-accent)] border-[color:var(--accent)]" : "text-[color:var(--accent)] border-[color:var(--line)] hover:bg-[color:var(--paper-deep)]");
     });
   }
   function syncSourceSelect(entries, active) {
@@ -5951,7 +6043,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function openDialog(labelledBy) {
     if (closeActiveDialog) closeActiveDialog();
     const overlay = el("div", "fixed inset-0 bg-black/30 flex items-end sm:items-center justify-center z-50");
-    const panel = el("div", "bg-white p-4 sm:p-5 w-full sm:w-[34rem] max-w-full sm:max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto");
+    const panel = el("div", "bg-[color:var(--color-surface)] p-4 sm:p-5 w-full sm:w-[34rem] max-w-full sm:max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto");
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "true");
     if (labelledBy) panel.setAttribute("aria-labelledby", labelledBy);
@@ -6091,7 +6183,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       const buttons = el("div", "mt-4 flex justify-end gap-2");
       const cancel = plainButton("\u53D6\u6D88");
       cancel.addEventListener("click", showList);
-      const go = el("button", "text-xs px-3 py-1.5 text-white bg-[color:var(--seal)]", "\u9084\u539F\u4E26\u91CD\u65B0\u6574\u7406");
+      const go = el("button", "text-xs px-3 py-1.5 text-[color:var(--color-on-accent)] bg-[color:var(--seal)]", "\u9084\u539F\u4E26\u91CD\u65B0\u6574\u7406");
       go.type = "button";
       go.addEventListener("click", async () => {
         go.disabled = true;
@@ -6146,7 +6238,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     list.style.display = "none";
     const foot = el("div", "mt-3 flex justify-between items-center gap-2");
     const refresh = plainButton("\u91CD\u65B0\u6383\u63CF");
-    const done = el("button", "text-xs px-4 py-2 sm:px-3 sm:py-1.5 bg-[color:var(--accent)] text-white", "\u5B8C\u6210");
+    const done = el("button", "text-xs px-4 py-2 sm:px-3 sm:py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]", "\u5B8C\u6210");
     done.type = "button";
     done.addEventListener("click", close);
     foot.append(refresh, done);
@@ -6245,7 +6337,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const bar = el("div", "hidden items-center gap-2 flex-wrap text-xs mt-1");
     bar.id = "remoteResumeBar";
     const text = el("span", "text-[color:var(--ink)]");
-    const go = el("button", "px-2 py-1 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-white", "\u63A5\u8457\u64AD");
+    const go = el("button", "px-2 py-1 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-[color:var(--color-on-accent)]", "\u63A5\u8457\u64AD");
     go.type = "button";
     const skip = el("button", "px-2 py-1 text-[color:var(--muted)]", "\u7565\u904E");
     skip.type = "button";
@@ -7063,7 +7155,14 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         margin: marginMm,
         filename: buildPdfFilename(song2),
         image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: HTML2CANVAS_SCALE, useCORS: true },
+        html2canvas: {
+          scale: HTML2CANVAS_SCALE,
+          useCORS: true,
+          // PDF 一律淺色（v1.1.0）：html2canvas 截的是複製出來的文件，在複本上切回淺色，畫面本身不會閃
+          onclone: (doc) => {
+            doc.documentElement.setAttribute("data-theme", "light");
+          }
+        },
         jsPDF: { unit: "mm", format: "a4", orientation: landscape ? "landscape" : "portrait" },
         // 分頁點已經由 insertManualPageBreaks()／layoutTwoColumns() 用真實量測結果決定好了
         // （切在我們自己插入的空白 spacer 上），這裡不需要也不應該再疊加 pagebreak.avoid
@@ -7116,8 +7215,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "text-xs px-3 py-1.5 border transition-colors " + ({
-          primary: "border-[color:var(--accent)] bg-[color:var(--accent)] text-white",
-          danger: "border-[color:var(--seal)] text-[color:var(--seal)] hover:bg-[color:var(--seal)] hover:text-white"
+          primary: "border-[color:var(--accent)] bg-[color:var(--accent)] text-[color:var(--color-on-accent)]",
+          danger: "border-[color:var(--seal)] text-[color:var(--seal)] hover:bg-[color:var(--seal)] hover:text-[color:var(--color-on-accent)]"
         }[variant] || "border-[color:var(--line)] hover:bg-[color:var(--paper-deep)]");
         btn.textContent = label;
         btn.addEventListener("click", () => close(value));
@@ -7336,7 +7435,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     {
       // v0.13.10：手機也有「顯示」選單（只看不改的畫面只留這一顆），所以不設 available
       title: "\u300C\u986F\u793A\u300D\u9078\u55AE",
-      body: "\u6B4C\u8A5E\u5B57\u7D1A\u3001\u884C\u8DDD\u3001\u5047\u540D\u986F\u793A\u8207\u96B1\u85CF\u3001\u5206\u8272\u986F\u793A\uFF08\u5E95\u8272\uFF0F\u6587\u5B57\u8272\uFF09\u90FD\u5728\u9019\u88E1\u8ABF\uFF0C\u9078\u904E\u6703\u8A18\u4F4F\u3002\u9801\u5C3E\u7684\u6DF7\u97F3\u9215\uFF08\u539F\u66F2 \u21C4 \u7121\u4EBA\u8072\u7248\u672C\uFF09\u9810\u8A2D\u96B1\u85CF\uFF0C\u8981\u7528\u7684\u8A71\u5728\u9019\u88E1\u6253\u958B\u3002",
+      body: "\u6B4C\u8A5E\u5B57\u7D1A\u3001\u884C\u8DDD\u3001\u5047\u540D\u986F\u793A\u8207\u96B1\u85CF\u3001\u5206\u8272\u986F\u793A\uFF08\u5E95\u8272\uFF0F\u6587\u5B57\u8272\uFF09\u3001\u6DF1\u6DFA\u8272\u90FD\u5728\u9019\u88E1\u8ABF\uFF0C\u9078\u904E\u6703\u8A18\u4F4F\u3002\u9801\u5C3E\u7684\u6DF7\u97F3\u9215\uFF08\u539F\u66F2 \u21C4 \u7121\u4EBA\u8072\u7248\u672C\uFF09\u9810\u8A2D\u96B1\u85CF\uFF0C\u8981\u7528\u7684\u8A71\u5728\u9019\u88E1\u6253\u958B\u3002",
       before: () => {
         ensureLibrarySongSelected();
         ensurePracticeModeVisible();
@@ -8877,7 +8976,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         const paired = p.lineIndex !== null;
         const line = paired ? plainLineText(lyrics[p.lineIndex]) : "\uFF08\u627E\u4E0D\u5230\u5C0D\u61C9\u7684\u6B4C\u8A5E\u884C\uFF09";
         const weak = paired && p.score < 0.4;
-        return `<tr style="border-top:1px solid var(--line);${paired ? "" : "background:#fff4e8"}">
+        return `<tr style="border-top:1px solid var(--line);${paired ? "" : "background:var(--pending-bg)"}">
         <td class="px-2 py-1" style="color:var(--accent);white-space:nowrap">${formatTime(e.time)}</td>
         ${hasTimeline2 ? `<td class="px-2 py-1" style="color:var(--muted);white-space:nowrap">${paired && existingTimes[p.lineIndex] != null ? formatTime(existingTimes[p.lineIndex]) : "\u2014"}</td>` : ""}
         <td class="px-2 py-1">${escapeHtml(e.text)}</td>
@@ -9333,7 +9432,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       empty.innerHTML = '<strong>\u9084\u6C92\u6709\u6B4C\u66F2</strong><br>\u5230\u300C\u6211\u7684\u6B4C\u5EAB\u300D\u641C\u5C0B\uFF0C<br>\u6309\u6B4C\u540D\u65C1\u7684 <span style="vertical-align:middle;display:inline-block;line-height:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="14" y2="12"/><line x1="3" y1="18" x2="10" y2="18"/><line x1="18" y1="9" x2="18" y2="19"/><line x1="13" y1="14" x2="23" y2="14"/></svg></span> \u52A0\u5165<br>';
       const go = document.createElement("button");
       go.type = "button";
-      go.className = "mt-2 text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] bg-white";
+      go.className = "mt-2 text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] bg-[color:var(--color-surface)]";
       go.textContent = "\u524D\u5F80\u6211\u7684\u6B4C\u5EAB";
       go.addEventListener("click", () => {
         if (typeof handlers2.onGoLibrary === "function") handlers2.onGoLibrary();
@@ -10750,7 +10849,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     overlay.className = "fixed inset-0 bg-black/30 flex items-center justify-center z-50";
     overlay.id = "mixPickDialog";
     const panel = document.createElement("div");
-    panel.className = "bg-white p-5 w-[34rem] max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto";
+    panel.className = "bg-[color:var(--color-surface)] p-5 w-[34rem] max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto";
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "true");
     panel.setAttribute("aria-labelledby", "mixPickTitle");
@@ -10888,7 +10987,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     });
     const ok = document.createElement("button");
     ok.type = "button";
-    ok.className = "text-xs px-3 py-1.5 bg-[color:var(--accent)] text-white";
+    ok.className = "text-xs px-3 py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]";
     ok.textContent = "\u5B8C\u6210";
     ok.addEventListener("click", close);
     const left = document.createElement("span");
@@ -10927,7 +11026,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     overlay.className = "fixed inset-0 bg-black/30 flex items-center justify-center z-50";
     overlay.id = "mixOfflineDialog";
     const panel = document.createElement("div");
-    panel.className = "bg-white p-5 w-[34rem] max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto";
+    panel.className = "bg-[color:var(--color-surface)] p-5 w-[34rem] max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto";
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "true");
     panel.setAttribute("aria-labelledby", "mixOfflineTitle");
@@ -10986,7 +11085,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       });
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] flex-none bg-white";
+      btn.className = "text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] flex-none bg-[color:var(--color-surface)]";
       btn.addEventListener("click", () => input.click());
       row.append(title, body, btn, input);
       panel.appendChild(row);
@@ -11005,7 +11104,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     dirInput.setAttribute("directory", "");
     const dirBtn = document.createElement("button");
     dirBtn.type = "button";
-    dirBtn.className = "text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] flex-none bg-white";
+    dirBtn.className = "text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] flex-none bg-[color:var(--color-surface)]";
     dirBtn.textContent = "\u9078\u64C7\u8CC7\u6599\u593E\u2026";
     dirBtn.addEventListener("click", () => dirInput.click());
     dirInput.addEventListener("change", () => {
@@ -11074,12 +11173,12 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     btns.className = "flex gap-2 flex-none";
     const cancel = document.createElement("button");
     cancel.type = "button";
-    cancel.className = "text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] bg-white";
+    cancel.className = "text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)] bg-[color:var(--color-surface)]";
     cancel.textContent = "\u53D6\u6D88";
     cancel.addEventListener("click", close);
     const ok = document.createElement("button");
     ok.type = "button";
-    ok.className = "text-xs px-3 py-1.5 bg-[color:var(--accent)] text-white";
+    ok.className = "text-xs px-3 py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]";
     ok.textContent = "\u5B8C\u6210\u4E26\u5207\u63DB";
     btns.append(cancel, ok);
     const leftBox = document.createElement("span");
@@ -12535,6 +12634,28 @@ ${err.message}`);
       btn.classList.toggle("active", btn.dataset.colorMode === mode3);
     });
   }
+  var SYSTEM_DARK_QUERY = window.matchMedia("(prefers-color-scheme: dark)");
+  function applyTheme(pref) {
+    const resolved = pref === "dark" || pref === "system" && SYSTEM_DARK_QUERY.matches ? "dark" : "light";
+    document.documentElement.dataset.theme = resolved;
+    const bg = getComputedStyle(document.documentElement).getPropertyValue("--color-bg").trim();
+    if (bg) document.querySelector('meta[name="theme-color"]')?.setAttribute("content", bg);
+    document.querySelectorAll(".theme-group .lyrics-size-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.themePref === pref);
+    });
+  }
+  function bindThemeToggle() {
+    applyTheme(getTheme());
+    document.querySelectorAll(".theme-group .lyrics-size-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setTheme(btn.dataset.themePref);
+        applyTheme(btn.dataset.themePref);
+      });
+    });
+    SYSTEM_DARK_QUERY.addEventListener?.("change", () => {
+      if (getTheme() === "system") applyTheme("system");
+    });
+  }
   function bindColorModeToggle() {
     const buttons = document.querySelectorAll(".color-mode-group .lyrics-size-btn");
     if (!buttons.length) return;
@@ -12713,6 +12834,7 @@ ${err.message}`);
     bindLyricsFontSizeToggle();
     bindLyricsSpacingToggle();
     bindColorModeToggle();
+    bindThemeToggle();
     bindLyricsScrollbarGutter();
     bindFuriganaToggle();
     bindLyricsHomeButton();
