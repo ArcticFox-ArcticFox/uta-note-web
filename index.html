@@ -1514,7 +1514,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 1.4.1</span>
+        <span class="tabular-nums">V 1.5.0</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -2711,6 +2711,131 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
 
+  // js/state/remote-stores.js
+  var BASE_URL = "api/sync/";
+  var PUSH_DELAY_MS2 = 2e3;
+  var PULL_GAP_MS = 1e4;
+  var RETRY_DELAY_MS2 = 15e3;
+  var TIMEOUT_MS = 5e3;
+  var MAX_ATTEMPTS = 4;
+  async function runStoreSync({ read, write: write2, merge, get, put, now = Date.now }) {
+    let server = await get();
+    let adopted = false;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const m = merge(read(), server.value, now());
+      if (m.changedLocal) {
+        write2(m.value);
+        adopted = true;
+      }
+      if (!m.changedRemote) return { adopted, pushed: false };
+      const res = await put(server.rev, m.value);
+      if (res.ok) return { adopted, pushed: true };
+      server = { rev: res.rev, value: res.value };
+    }
+    throw new Error("sync did not converge");
+  }
+  var stores = /* @__PURE__ */ new Map();
+  var enabled = false;
+  var listenersBound = false;
+  function registerSyncedStore({ name, storageKey: storageKey2, merge, onAdopted = null }) {
+    stores.set(name, { storageKey: storageKey2, merge, onAdopted, timer: null, busy: false, again: false, disabled: false, lastRunAt: 0 });
+  }
+  function readLocal(storageKey2) {
+    try {
+      const raw = localStorage.getItem(storageKey2);
+      return raw === null ? null : JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  async function request(url, options = {}) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    try {
+      return await fetch(url, { ...options, signal: ctrl.signal, cache: "no-store" });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  var Unsupported = class extends Error {
+  };
+  async function syncOne(name) {
+    const s = stores.get(name);
+    if (!s || s.disabled || !enabled) return;
+    if (s.busy) {
+      s.again = true;
+      return;
+    }
+    s.busy = true;
+    s.lastRunAt = Date.now();
+    clearTimeout(s.timer);
+    s.timer = null;
+    try {
+      const url = BASE_URL + name;
+      const result = await runStoreSync({
+        read: () => readLocal(s.storageKey),
+        write: (value) => localStorage.setItem(s.storageKey, JSON.stringify(value)),
+        merge: s.merge,
+        get: async () => {
+          const res = await request(url);
+          if (res.status === 404 || res.status === 400) throw new Unsupported();
+          if (!res.ok) throw new Error(`GET ${res.status}`);
+          const body = await res.json();
+          if (!body || !Number.isInteger(body.rev)) throw new Unsupported();
+          return { rev: body.rev, value: body.value ?? null };
+        },
+        put: async (baseRev, value) => {
+          const res = await request(url, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ baseRev, value })
+          });
+          if (res.status === 409) {
+            const body = await res.json();
+            return { ok: false, conflict: true, rev: body.rev, value: body.value ?? null };
+          }
+          if (!res.ok) throw new Error(`PUT ${res.status}`);
+          return { ok: true, rev: (await res.json()).rev };
+        }
+      });
+      if (result.adopted && s.onAdopted) s.onAdopted(name);
+    } catch (err) {
+      if (err instanceof Unsupported) {
+        s.disabled = true;
+      } else {
+        s.timer = setTimeout(() => syncOne(name), RETRY_DELAY_MS2);
+      }
+    } finally {
+      s.busy = false;
+      if (s.again && !s.disabled) {
+        s.again = false;
+        schedule(name, PUSH_DELAY_MS2);
+      }
+    }
+  }
+  function schedule(name, delay) {
+    const s = stores.get(name);
+    if (!s || s.disabled || !enabled) return;
+    clearTimeout(s.timer);
+    s.timer = setTimeout(() => syncOne(name), delay);
+  }
+  function notifyStoreSaved(name) {
+    schedule(name, PUSH_DELAY_MS2);
+  }
+  async function initRemoteStores() {
+    enabled = true;
+    await Promise.all([...stores.keys()].map((name) => syncOne(name)));
+    if (listenersBound) return;
+    listenersBound = true;
+    window.addEventListener("online", () => stores.forEach((_, name) => schedule(name, 0)));
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState !== "visible") return;
+      stores.forEach((s, name) => {
+        if (Date.now() - s.lastRunAt >= PULL_GAP_MS) schedule(name, 0);
+      });
+    });
+  }
+
   // js/utils/timing-undo.js
   var UNDO_CAP = 30;
   var hasTime = (t) => typeof t === "number" && Number.isFinite(t);
@@ -2814,6 +2939,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var PRACTICE_MODE_KEY = "utaNotePracticeMode_v1";
   var AUDIO_DURATIONS_KEY = "utaNoteAudioDurations_v1";
   var PRACTICE_SETS_KEY = "utaNotePracticeSets_v1";
+  var PRACTICE_SETS_SYNC_NAME = "practice-sets";
   var PLAY_RESUME_KEY = "utaNotePlayResume_v1";
   var LYRICS_FONT_SIZES = ["small", "medium", "large"];
   var LYRICS_FONT_SIZE_DEFAULT = "medium";
@@ -3063,6 +3189,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     if (typeof serialized !== "string" || serialized.length > 2e6) return false;
     try {
       localStorage.setItem(PRACTICE_SETS_KEY, serialized);
+      notifyStoreSaved(PRACTICE_SETS_SYNC_NAME);
       return true;
     } catch {
       return false;
@@ -4184,7 +4311,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     if (!id || !name) return null;
     const items = (Array.isArray(raw.items) ? raw.items : []).slice(0, MAX_ITEMS_PER_SET).map(normalizeItem).filter(Boolean);
     const savedAt = Number.isFinite(raw.savedAt) ? raw.savedAt : 0;
-    return { id, name, savedAt, items };
+    const updatedAt = Number.isFinite(raw.updatedAt) ? raw.updatedAt : savedAt;
+    return { id, name, savedAt, updatedAt, items };
   }
   function normalizePracticeSets(value) {
     let v = value;
@@ -4362,6 +4490,92 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       result.added++;
     }
     return result;
+  }
+  var TOMBSTONE_DAYS = 30;
+  var DAY_MS = 864e5;
+  function normalizeTombstone(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const id = str(raw.id);
+    if (!id || str(raw.name)) return null;
+    const deletedAt = Number.isFinite(raw.deletedAt) && raw.deletedAt > 0 ? raw.deletedAt : 0;
+    return deletedAt ? { id, deletedAt } : null;
+  }
+  function readPracticeStore(value) {
+    let v = value;
+    if (typeof v === "string") {
+      try {
+        v = JSON.parse(v);
+      } catch {
+        v = [];
+      }
+    }
+    const arr = Array.isArray(v) ? v : [];
+    const sets2 = normalizePracticeSets(arr);
+    const seen = new Set(sets2.map((s) => s.id));
+    const tombstones = [];
+    for (const raw of arr) {
+      const t = normalizeTombstone(raw);
+      if (!t || seen.has(t.id)) continue;
+      seen.add(t.id);
+      tombstones.push(t);
+    }
+    return { sets: sets2, tombstones };
+  }
+  function writePracticeStore({ sets: sets2, tombstones }, now = Date.now()) {
+    const live = (sets2 || []).slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    const dead = (tombstones || []).filter((t) => now - t.deletedAt <= TOMBSTONE_DAYS * DAY_MS).slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    return [...live, ...dead];
+  }
+  function stampPracticeStore(prev, nextSets, now = Date.now()) {
+    const before = readPracticeStore(prev);
+    const byId = new Map(before.sets.map((s) => [s.id, s]));
+    const sets2 = (nextSets || []).map((s) => {
+      const old = byId.get(s.id);
+      const same = old && old.name === s.name && JSON.stringify(old.items) === JSON.stringify(s.items);
+      return { ...s, updatedAt: same ? old.updatedAt : now };
+    });
+    const keep = new Set(sets2.map((s) => s.id));
+    const tombstones = before.tombstones.filter((t) => !keep.has(t.id));
+    for (const old of before.sets) if (!keep.has(old.id)) tombstones.push({ id: old.id, deletedAt: now });
+    return writePracticeStore({ sets: sets2, tombstones }, now);
+  }
+  var canonical = (store, now) => JSON.stringify(writePracticeStore(store, now));
+  function mergePracticeStores(local, remote, now = Date.now()) {
+    const a = readPracticeStore(local);
+    const b = readPracticeStore(remote);
+    const best = /* @__PURE__ */ new Map();
+    const consider = (id, at, set) => {
+      const cur = best.get(id);
+      const win = !cur || at > cur.at || at === cur.at && set && !cur.set || at === cur.at && set && cur.set && JSON.stringify(set) > JSON.stringify(cur.set);
+      if (win) best.set(id, { at, set });
+    };
+    for (const s of [...a.sets, ...b.sets]) consider(s.id, s.updatedAt, s);
+    for (const t of [...a.tombstones, ...b.tombstones]) consider(t.id, t.deletedAt, null);
+    let sets2 = [...best.values()].filter((v) => v.set).map((v) => v.set);
+    const tombstones = [...best.entries()].filter(([, v]) => !v.set).map(([id, v]) => ({ id, deletedAt: v.at }));
+    if (sets2.length > MAX_PRACTICE_SETS) {
+      sets2 = sets2.slice().sort((x, y) => y.updatedAt - x.updatedAt || (x.id < y.id ? -1 : 1)).slice(0, MAX_PRACTICE_SETS);
+    }
+    sets2.sort((x, y) => x.id < y.id ? -1 : x.id > y.id ? 1 : 0);
+    const taken = [];
+    sets2 = sets2.map((s) => {
+      let name = s.name;
+      let renamed = false;
+      for (let n = 1; taken.some((k) => k === nameKey(name)); n++) {
+        const suffix = n === 1 ? "\uFF08\u540C\u6B65\uFF09" : `\uFF08\u540C\u6B65 ${n}\uFF09`;
+        name = s.name.slice(0, MAX_SET_NAME_LENGTH - suffix.length) + suffix;
+        renamed = true;
+      }
+      taken.push(nameKey(name));
+      return renamed ? { ...s, name, updatedAt: s.updatedAt + 1 } : s;
+    });
+    const value = writePracticeStore({ sets: sets2, tombstones }, now);
+    const out = JSON.stringify(value);
+    return {
+      value,
+      changedLocal: out !== canonical(a, now),
+      changedRemote: out !== canonical(b, now)
+    };
   }
 
   // js/components/practice-sets.js
@@ -10222,7 +10436,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
 
   // js/components/audio-duration.js
   var MAX_CONCURRENT = 2;
-  var TIMEOUT_MS = 8e3;
+  var TIMEOUT_MS2 = 8e3;
   var MAX_STORED = 500;
   var known = /* @__PURE__ */ new Map();
   var failed = /* @__PURE__ */ new Set();
@@ -10359,7 +10573,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         }
         resolve(value);
       };
-      const timer = setTimeout(() => finish(null), TIMEOUT_MS);
+      const timer = setTimeout(() => finish(null), TIMEOUT_MS2);
       audio.preload = "metadata";
       audio.onloadedmetadata = () => finish(audio.duration);
       audio.onerror = () => finish(null);
@@ -13502,6 +13716,12 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     saveData();
     refreshView();
   }
+  function savePracticeSetsList(list) {
+    return setPracticeSets(JSON.stringify(stampPracticeStore(getPracticeSets(), list)));
+  }
+  function savePracticeSetsSerialized(serialized) {
+    return savePracticeSetsList(normalizePracticeSets(serialized));
+  }
   async function handleExportCsv() {
     const memberships = membershipsBySong(
       normalizePracticeSets(getPracticeSets()),
@@ -13598,7 +13818,7 @@ ${err.message}`);
     const setsResult = mergeImportedSets(existingSets, importedSets, state.lists.library.songs, { replace: replaceAll });
     let setsSaveFailed = false;
     if (importedSets.length > 0) {
-      setsSaveFailed = !setPracticeSets(serializePracticeSets(setsResult.sets));
+      setsSaveFailed = !savePracticeSetsList(setsResult.sets);
     }
     saveData();
     refreshView();
@@ -13929,6 +14149,14 @@ ${setsSummary}\u3002` : ""}`);
       )
     });
     setBackendPresent(isServerMode());
+    registerSyncedStore({
+      name: PRACTICE_SETS_SYNC_NAME,
+      storageKey: PRACTICE_SETS_KEY,
+      merge: mergePracticeStores,
+      onAdopted: () => renderPracticeSets()
+      // 拉到別台較新的內容：卡片重畫（內容簽章不同才會真的重畫）
+    });
+    if (isServerMode()) await initRemoteStores();
     window.utaChangeLog = getChangeLog;
     window.utaBlockedLog = getBlockedLog;
     document.addEventListener("inputblocked", (e) => handleBlockedInput(e.detail || {}));
@@ -14029,7 +14257,7 @@ ${setsSummary}\u3002` : ""}`);
     bindPracticeSets({
       getLibrarySongs: () => state.lists.library.songs,
       getSets: getPracticeSets,
-      saveSets: setPracticeSets,
+      saveSets: savePracticeSetsSerialized,
       applySet: handleApplyPracticeSet
     });
     bindMixToggle({
