@@ -537,6 +537,15 @@ body.color-text #lyricsArea .lyric-line.is-current{
   flex-shrink:0;
   cursor:pointer;
 }
+/* 圓點對齊「第一行本字」的垂直中心（v1.2.1）：原本置中整個「假名＋本字」區塊，有假名時偏高、換行時停在兩行中間。
+   圓點與文字欄一起用 baseline 對齊（只有一個 item 設 baseline 不會動，所以文字欄也要設）：圓點底邊落在第一行本字基線，
+   再上提「約半個字高（0.38em）− 圓點半徑」，與假名列、換行數無關。+1.5px（診斷頁選 C 的 +1px，再依實機截圖量到的墨色重心加 0.5px）：
+   計算值是字形墨跡中心，看起來會偏上。目前句的圓點是 inline-flex（內含 ♪），baseline 取 ♪ 的基線，要另外補正。 */
+.lyric-line > .color-dot, .lyric-segment > .color-dot{
+  align-self:baseline; position:relative; top:calc(7.6px - 0.38em);
+}
+.lyric-line.is-current > .color-dot{ top:calc(6.1px - 0.38em); }
+.lyric-line > .flex-1, .lyric-segment > .flex-1{ align-self:baseline; }
 .color-popover{
   position:absolute;
   background:var(--color-surface);
@@ -852,6 +861,43 @@ html body.h-screen{ height:100vh; height:100dvh; }
    窄欄（手機半個螢幕）放不下時按鈕自己換到第二行 */
 #pqResumeBar:not(.hidden){ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; padding:6px 8px; border:1px solid var(--line); background:var(--paper-deep); font-size:12px; line-height:1.5; color:var(--muted); }
 #pqResumeBar b{ color:var(--accent-deep); font-weight:700; font-variant-numeric:tabular-nums; }
+
+/* ==========================================================================
+   備用歌單（v1.4.0，邏輯見 components/practice-sets.js；方案 1：欄內卡片，mockup 是使用者選定的）
+   新寫的樣式只用設計令牌（--color-*、--text-*、--space-*、--shadow-2），深淺色靠令牌自己切換，不另寫 dark 覆蓋。
+   ========================================================================== */
+.ps-toggle{ width:100%; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; font-size:var(--text-xs); color:var(--color-text); background:var(--color-surface); border:1px solid var(--color-border); cursor:pointer; }
+.ps-toggle small{ margin-left:2px; font-size:var(--text-xs); color:var(--color-text-muted); }
+.ps-card{ margin-top:var(--space-2); background:var(--color-surface); border:1px solid var(--color-border); box-shadow:var(--shadow-2); }
+.ps-item{ display:flex; align-items:center; gap:6px; padding:8px 10px; border-bottom:1px solid var(--color-border); }
+.ps-name{ flex:1; min-width:0; }
+.ps-name b{ display:block; font-size:var(--text-xs); font-weight:700; color:var(--color-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ps-name span{ display:block; font-size:var(--text-xs); color:var(--color-text-muted); }
+.ps-load, .ps-more{ flex-shrink:0; min-height:28px; font-size:var(--text-xs); background:var(--color-surface); cursor:pointer; }
+.ps-load{ padding:2px 8px; color:var(--color-accent); border:1px solid var(--color-accent); }
+.ps-more{ width:28px; color:var(--color-text-muted); border:1px solid var(--color-border); }
+.ps-menu{ display:flex; flex-wrap:wrap; gap:4px 12px; padding:6px 10px; background:var(--color-surface-2); border-bottom:1px solid var(--color-border); }
+.ps-menu-btn{ font-size:var(--text-xs); color:var(--color-accent); background:none; border:0; padding:4px 0; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
+.ps-menu-btn.is-danger{ color:var(--color-danger); }
+.ps-menu-btn:disabled, .ps-save:disabled{ opacity:.45; cursor:default; }
+.ps-foot{ padding:8px 10px; }
+.ps-save{ font-size:var(--text-xs); font-weight:700; color:var(--color-accent); background:none; border:0; padding:0; cursor:pointer; text-align:left; }
+.ps-empty{ padding:12px 10px; font-size:var(--text-xs); line-height:1.8; text-align:center; color:var(--color-text-muted); border-bottom:1px solid var(--color-border); }
+.ps-empty strong{ color:var(--color-text); font-weight:500; }
+.ps-input{ width:100%; box-sizing:border-box; padding:6px 8px; font:inherit; color:var(--color-text); background:var(--color-bg); border:1px solid var(--color-accent); }
+.ps-error{ font-size:var(--text-xs); color:var(--color-danger); }
+.ps-hint{ font-size:var(--text-xs); color:var(--color-text-muted); }
+.ps-dlg-btn{ font-size:var(--text-xs); padding:6px 12px; color:var(--color-text); background:var(--color-surface); border:1px solid var(--color-border); cursor:pointer; }
+.ps-dlg-btn.is-primary{ color:var(--color-on-accent); background:var(--color-accent); border-color:var(--color-accent); font-weight:700; }
+.ps-dlg-btn.is-danger{ color:var(--color-danger); border-color:var(--color-danger); }
+@media (max-width:768px){
+  /* 手機的可點目標：令牌 --touch-min（44px）；整列至少這麼高，按鈕不必撐滿 */
+  .ps-toggle{ min-height:var(--touch-min); }
+  .ps-item{ min-height:var(--touch-min); }
+  .ps-load, .ps-more{ min-height:36px; }
+  .ps-menu-btn, .ps-save{ min-height:36px; }
+  .ps-dlg-btn{ min-height:var(--touch-min); }
+}
 
 /* 練習歌單的總時間／剩餘時間（v0.8.0）：貼在清單欄最下面。電腦版最上緣多一條 3px 的進度條（這一輪已播的比例），
    手機（≤768px）不顯示進度條，右邊多留 30px（手機瀏覽模式本來就有 18px 超出螢幕右緣，見下面「手機版面切換」）。 */
@@ -1468,7 +1514,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 1.2.0</span>
+        <span class="tabular-nums">V 1.4.0</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -1663,6 +1709,13 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div id="practiceQueueBar" class="hidden px-3 pt-3 space-y-2">
       <button id="pqPlayBtn" type="button"
         class="w-full text-sm py-2 border border-[color:var(--accent)] bg-[color:var(--accent)] text-[color:var(--color-on-accent)] font-bold transition-opacity">▶ 全部播放</button>
+      <!-- 備用歌單（v1.4.0，邏輯見 components/practice-sets.js）：把目前的練習歌單存成快照、之後一鍵載入；只存在這台裝置 -->
+      <div id="practiceSets">
+        <button id="psToggleBtn" type="button" class="ps-toggle" aria-expanded="false" aria-controls="psCard">
+          <span>備用歌單<small id="psToggleCount">（0）</small></span><span id="psToggleArrow" aria-hidden="true">▾</span>
+        </button>
+        <div id="psCard" class="ps-card hidden"></div>
+      </div>
       <!-- 播放模式：「隨機」「循環」（v0.7.1）、「間歇」（v0.8.0）是三個獨立開關，淺底色＝沒按（不隨機、不循環、不間歇），按下去變深色。
            都沒按＝依清單順序播到最後一首就停，每首之間自動接著播。手機頁尾（#pqFootMode）只放前兩顆，使用者決定不加「間歇」。 -->
       <div id="pqModeGroup" class="lyrics-size-group" role="group" aria-label="播放模式">
@@ -2012,6 +2065,15 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   </div>
 </div>
 
+<!-- 備用歌單的對話框（v1.4.0）：存檔／重新命名（有輸入框）與載入確認／覆蓋／刪除共用，內容與按鈕由 components/practice-sets.js 填入。 -->
+<div id="psDialog" class="hidden fixed inset-0 bg-[color:var(--color-overlay)] flex items-center justify-center z-50">
+  <div class="bg-[color:var(--color-surface)] p-5 w-[22rem] max-w-[92vw] shadow-lg max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="psDialogTitle">
+    <p id="psDialogTitle" class="font-serif-jp text-lg font-bold mb-3"></p>
+    <div id="psDialogBody" class="text-sm text-[color:var(--ink)] space-y-2"></div>
+    <div id="psDialogButtons" class="mt-4 flex flex-wrap justify-end gap-2"></div>
+  </div>
+</div>
+
 <!-- 匯入對話框（v0.1.8 新增，原檔案沒有）：「附加／取代全部」與「重複歌曲逐首詢問」共用，
      內容與按鈕由 components/import-dialog.js 填入。 -->
 <div id="importDialog" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
@@ -2071,8 +2133,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const BOM = "\uFEFF";
     return text.startsWith(BOM) ? text : BOM + text;
   }
-  function escapeHtml(str) {
-    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  function escapeHtml(str2) {
+    return String(str2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function toSafeExternalHref(value) {
     const trimmed = String(value || "").trim();
@@ -2091,8 +2153,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const value = String(audioValue ?? "").trim();
     if (!value) return null;
     if (URL_SCHEME_REGEX.test(value) && !/^https?:/i.test(value)) return null;
-    const isUrl = /^https?:/i.test(value);
-    const m = (isUrl ? /^([^?#]*?)\.[A-Za-z0-9]{1,5}([?#].*)?$/ : /^(.*)\.[A-Za-z0-9]{1,5}$()/).exec(value);
+    const isUrl2 = /^https?:/i.test(value);
+    const m = (isUrl2 ? /^([^?#]*?)\.[A-Za-z0-9]{1,5}([?#].*)?$/ : /^(.*)\.[A-Za-z0-9]{1,5}$()/).exec(value);
     if (!m || m[1] === "" || m[1].endsWith("/")) return null;
     return `${m[1]}.lrc${m[2] || ""}`;
   }
@@ -2751,6 +2813,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var THEME_DEFAULT = "light";
   var PRACTICE_MODE_KEY = "utaNotePracticeMode_v1";
   var AUDIO_DURATIONS_KEY = "utaNoteAudioDurations_v1";
+  var PRACTICE_SETS_KEY = "utaNotePracticeSets_v1";
   var PLAY_RESUME_KEY = "utaNotePlayResume_v1";
   var LYRICS_FONT_SIZES = ["small", "medium", "large"];
   var LYRICS_FONT_SIZE_DEFAULT = "medium";
@@ -2987,6 +3050,22 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     try {
       localStorage.setItem(PRACTICE_MODE_KEY, serialized);
     } catch {
+    }
+  }
+  function getPracticeSets() {
+    try {
+      return localStorage.getItem(PRACTICE_SETS_KEY);
+    } catch {
+      return null;
+    }
+  }
+  function setPracticeSets(serialized) {
+    if (typeof serialized !== "string" || serialized.length > 2e6) return false;
+    try {
+      localStorage.setItem(PRACTICE_SETS_KEY, serialized);
+      return true;
+    } catch {
+      return false;
     }
   }
   function getAudioDurations() {
@@ -3389,6 +3468,489 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return { items: matches.slice(0, limit), total: matches.length };
   }
 
+  // js/engine/nas-browse.js
+  function dirOf(path) {
+    const i = String(path).lastIndexOf("/");
+    return i < 0 ? "" : path.slice(0, i);
+  }
+  function baseName(path) {
+    const i = String(path).lastIndexOf("/");
+    return i < 0 ? String(path) : path.slice(i + 1);
+  }
+  function filterAudioFiles(files, query) {
+    const q2 = searchKey(query);
+    if (!q2) return files;
+    return files.filter((f) => searchKey(f.path).includes(q2));
+  }
+  function groupAudioByFolder(files) {
+    const groups = [];
+    let current = null;
+    for (const f of files) {
+      const dir = dirOf(f.path);
+      if (!current || current.dir !== dir) {
+        current = { dir, files: [] };
+        groups.push(current);
+      }
+      current.files.push(f);
+    }
+    return groups;
+  }
+  function makeAddedChecker(audioList) {
+    const key = (v) => String(v ?? "").trim().normalize("NFC");
+    const set = new Set((audioList || []).map(key).filter(Boolean));
+    return (path) => set.has(key(path));
+  }
+  function formatFileSize(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return "";
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+  var pad2 = (n) => String(n).padStart(2, "0");
+  function formatBackupTime(value, now = /* @__PURE__ */ new Date()) {
+    const d = new Date(value);
+    if (!value || Number.isNaN(d.getTime())) return "\u6642\u9593\u4E0D\u660E";
+    const hm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    const dayStart = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diffDays = Math.round((dayStart(now) - dayStart(d)) / 864e5);
+    if (diffDays === 0) return `\u4ECA\u5929 ${hm}`;
+    if (diffDays === 1) return `\u6628\u5929 ${hm}`;
+    const md = `${d.getMonth() + 1}/${d.getDate()}`;
+    return d.getFullYear() === now.getFullYear() ? `${md} ${hm}` : `${d.getFullYear()}/${md} ${hm}`;
+  }
+  function describeBackup(backup, current) {
+    if (backup.library == null || backup.wishlist == null) {
+      return { readable: false, counts: "\u9019\u4EFD\u5099\u4EFD\u7121\u6CD5\u8B80\u53D6", delta: "" };
+    }
+    const counts = `\u6211\u7684\u6B4C\u5EAB ${backup.library} \u9996\u30FB\u8A31\u9858\u6B4C\u55AE ${backup.wishlist} \u9996`;
+    const part = (label, diff) => diff === 0 ? null : `${label} ${diff > 0 ? "+" : "\u2212"}${Math.abs(diff)}`;
+    const parts = [part("\u6B4C\u5EAB", backup.library - current.library), part("\u8A31\u9858", backup.wishlist - current.wishlist)].filter(Boolean);
+    return { readable: true, counts, delta: parts.length ? `\uFF08${parts.join("\u3001")}\uFF09` : "\uFF08\u9996\u6578\u76F8\u540C\uFF09" };
+  }
+  function describeRestoreEffect(backup, current) {
+    const total = (c) => c.library + c.wishlist;
+    const diff = backup.library + backup.wishlist - total(current);
+    if (diff === 0) return "\u6B4C\u66F2\u7E3D\u6578\u8DDF\u73FE\u5728\u4E00\u6A23";
+    return `\u6B4C\u66F2\u7E3D\u6578\u6BD4\u73FE\u5728${diff > 0 ? "\u591A" : "\u5C11"} ${Math.abs(diff)} \u9996`;
+  }
+  function looseKey(s) {
+    return String(s ?? "").normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+  }
+  function bigrams(s) {
+    const out = /* @__PURE__ */ new Map();
+    for (let i = 0; i < s.length - 1; i++) {
+      const g = s.slice(i, i + 2);
+      out.set(g, (out.get(g) || 0) + 1);
+    }
+    return out;
+  }
+  function dice(a, b) {
+    if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
+    const ga = bigrams(a);
+    const gb = bigrams(b);
+    let overlap = 0;
+    for (const [g, n] of ga) overlap += Math.min(n, gb.get(g) || 0);
+    return 2 * overlap / (a.length - 1 + b.length - 1);
+  }
+  var ARTIST_SPLIT = /\s*(?:feat\.?|ft\.?|featuring|×|＆|&|\/|／|、|,|，|\+|＋)\s*|\s+(?:x|with)\s+/iu;
+  function splitArtistKeys(artist) {
+    const keys = [looseKey(artist), ...String(artist ?? "").split(ARTIST_SPLIT).map(looseKey)];
+    return [...new Set(keys.filter((k) => k.length >= 2))];
+  }
+  function isSingleCharTitleMatch(path, title, baseKey, titleKey) {
+    if (baseKey === titleKey) return true;
+    const norm = (s) => String(s ?? "").normalize("NFKC").toLowerCase().trim();
+    const base = norm(baseName(path).replace(/\.[^.]+$/, ""));
+    const t = norm(title);
+    if (!t || !base.startsWith(t)) return false;
+    return /^\s*[-–—―]/.test(base.slice(t.length));
+  }
+  function isIosRiskyAudio(path) {
+    return /\.(opus|ogg)$/i.test(String(path ?? ""));
+  }
+  var SUGGEST_MIN_SCORE = 40;
+  var FUZZY_MIN_DICE = 0.7;
+  function suggestAudioFiles(files, song2, { limit = 5 } = {}) {
+    if (!song2) return [];
+    const titleKey = looseKey(song2.title);
+    const artistKeys = splitArtistKeys(song2.artist);
+    if (!titleKey && !artistKeys.length) return [];
+    const existing = (song2.audioList || []).map((v) => String(v ?? "").trim()).filter(Boolean);
+    const isAdded = makeAddedChecker(existing);
+    const existingDirs = new Set(existing.map(dirOf).filter(Boolean));
+    const out = [];
+    for (const file of files) {
+      if (isAdded(file.path)) continue;
+      const pathKey = looseKey(file.path);
+      const baseKey = looseKey(baseName(file.path).replace(/\.[^.]+$/, ""));
+      const reasons = [];
+      let score = 0;
+      if (titleKey) {
+        const exact = titleKey.length >= 2 ? pathKey.includes(titleKey) : isSingleCharTitleMatch(file.path, song2.title, baseKey, titleKey);
+        if (exact) {
+          score += 100;
+          reasons.push("\u6B4C\u540D\u76F8\u7B26");
+        } else if (titleKey.length >= 3) {
+          const d = dice(titleKey, baseKey);
+          if (d >= FUZZY_MIN_DICE) {
+            score += Math.round(60 * d);
+            reasons.push("\u6B4C\u540D\u8FD1\u4F3C");
+          }
+        }
+      }
+      if (artistKeys.some((k) => pathKey.includes(k))) {
+        score += 40;
+        reasons.push("\u6B4C\u624B\u76F8\u7B26");
+      }
+      if (score > 0 && existingDirs.has(dirOf(file.path))) {
+        score += 20;
+        reasons.push("\u540C\u8CC7\u6599\u593E");
+      }
+      if (score >= SUGGEST_MIN_SCORE) out.push({ file, score, reasons });
+    }
+    out.sort((a, b) => b.score - a.score || (a.file.path < b.file.path ? -1 : a.file.path > b.file.path ? 1 : 0));
+    return out.slice(0, limit);
+  }
+
+  // js/engine/mix-versions.js
+  var MIX_EXTS = ["mp3", "flac", "m4a", "wav", "aac"];
+  var MAX_MIX_SECONDS = 600;
+  var LENGTH_TOLERANCE = 1;
+  var MIX_MODES = ["orig", "alt"];
+  var MIX_MODE_DEFAULT = "orig";
+  var TIER_LABELS = ["\u4F34\u594F", "instrument", "\u5C0E\u97F3"];
+  var TIER_SUFFIXES = [["\u4F34\u594F"], ["instrumental", "instrument", "inst"], ["\u5C0E\u97F3"]];
+  function baseOf(path) {
+    const s = String(path ?? "").trim();
+    const noQuery = /^https?:/i.test(s) ? s.replace(/[?#].*$/, "") : s;
+    return noQuery.split(/[\\/]/).filter(Boolean).pop() || "";
+  }
+  function classifyName(path) {
+    let name = baseOf(path);
+    try {
+      name = decodeURIComponent(name);
+    } catch {
+    }
+    name = name.normalize("NFKC");
+    if (/伴奏/.test(name)) return 0;
+    if (/(^|[^a-z])(instrumental|instrument|inst|off[\s_-]?vocal)([^a-z]|$)/i.test(name)) return 1;
+    if (/導音|导音/.test(name)) return 2;
+    return null;
+  }
+  function originalBase(audioValue) {
+    const value = String(audioValue ?? "").trim();
+    if (!value) return null;
+    const hasScheme = /^[A-Za-z][A-Za-z0-9+.-]*:/.test(value);
+    if (hasScheme && !/^https?:/i.test(value)) return null;
+    const isUrl2 = /^https?:/i.test(value);
+    const m = (isUrl2 ? /^([^?#]*?)\.([A-Za-z0-9]{1,5})([?#].*)?$/ : /^(.*)\.([A-Za-z0-9]{1,5})()$/).exec(value);
+    if (!m || m[1] === "" || m[1].endsWith("/")) return null;
+    if (classifyName(value) !== null) return null;
+    return { base: m[1], suffix: m[3] || "", ext: m[2].toLowerCase() };
+  }
+  function sameNameCandidates(audioValue) {
+    const b = originalBase(audioValue);
+    if (!b) return [];
+    const exts = [b.ext, ...MIX_EXTS].filter((e, i, a) => MIX_EXTS.includes(e) && a.indexOf(e) === i);
+    const out = [];
+    TIER_SUFFIXES.forEach((names, tier) => {
+      names.forEach((name) => exts.forEach((ext) => {
+        out.push({ value: `${b.base}.${name}.${ext}${b.suffix}`, tier, source: "name" });
+      }));
+    });
+    return out;
+  }
+  var nfc = (s) => String(s ?? "").trim().normalize("NFC");
+  function listCandidates(audioList, activeValue) {
+    const active = nfc(activeValue);
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const raw of audioList || []) {
+      const v = String(raw ?? "").trim();
+      if (!v || nfc(v) === active || seen.has(nfc(v))) continue;
+      seen.add(nfc(v));
+      out.push({ value: v, tier: classifyName(v), source: "list" });
+    }
+    return out;
+  }
+  function rankCandidates(existingSameName, listed) {
+    const seen = /* @__PURE__ */ new Set();
+    const all = [];
+    [...existingSameName || [], ...listed || []].forEach((c, order) => {
+      const k = nfc(c.value);
+      if (seen.has(k)) return;
+      seen.add(k);
+      all.push({ ...c, order });
+    });
+    const tierRank = (t) => t === null || t === void 0 ? 9 : t;
+    const srcRank = (c) => c.source === "name" ? 0 : 1;
+    return all.sort((a, b) => tierRank(a.tier) - tierRank(b.tier) || srcRank(a) - srcRank(b) || a.order - b.order);
+  }
+  function pickDefault(ranked) {
+    return (ranked || []).find((c) => c.tier !== null && c.tier !== void 0) || null;
+  }
+  function normalizeMixPicks(raw) {
+    const out = {};
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      for (const [k, v] of Object.entries(raw)) {
+        if (typeof v === "string" && v.trim()) out[k] = v;
+      }
+    }
+    const keys = Object.keys(out);
+    if (keys.length > 200) keys.slice(0, keys.length - 200).forEach((k) => delete out[k]);
+    return out;
+  }
+  function lengthsMatch(a, b, tolerance = LENGTH_TOLERANCE) {
+    return Number.isFinite(a) && Number.isFinite(b) && a > 0 && b > 0 && Math.abs(a - b) <= tolerance;
+  }
+  function normalizeMixMode(value) {
+    return MIX_MODES.includes(value) ? value : MIX_MODE_DEFAULT;
+  }
+  function mixGains(mode3, match = { orig: 1, alt: 1 }) {
+    return normalizeMixMode(mode3) === "alt" ? { orig: 0, alt: match.alt } : { orig: match.orig, alt: 0 };
+  }
+  var MAX_MATCH_DB = 6;
+  var MIN_MATCH_DB = 0.5;
+  function loudnessMatch(origMono, altMono, rate, altPeak = 1) {
+    const none = { orig: 1, alt: 1, db: 0 };
+    const block = Math.max(1, Math.round(rate * 0.5));
+    const n = Math.min(origMono.length, altMono.length);
+    const ratios = [];
+    for (let i = 0; i + block <= n; i += block) {
+      let so = 0, sa = 0;
+      for (let j = i; j < i + block; j++) {
+        so += origMono[j] * origMono[j];
+        sa += altMono[j] * altMono[j];
+      }
+      const ro = Math.sqrt(so / block), ra = Math.sqrt(sa / block);
+      if (ro > 3e-3 && ra > 3e-3) ratios.push(ro / ra);
+    }
+    if (ratios.length < 8) return none;
+    ratios.sort((a, b) => a - b);
+    const r = ratios[Math.floor(ratios.length * 0.05)];
+    const db = 20 * Math.log10(r);
+    if (Math.abs(db) < MIN_MATCH_DB || Math.abs(db) > MAX_MATCH_DB) return none;
+    const g = 10 ** (db / 20);
+    if (g <= 1) return { orig: 1, alt: g, db };
+    const alt = Math.min(g, 0.98 / Math.max(altPeak, 1e-6));
+    return { orig: alt / g, alt, db };
+  }
+  function peakOf(samples) {
+    let m = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const x = Math.abs(samples[i]);
+      if (x > m) m = x;
+    }
+    return m;
+  }
+  function blockRms(samples, block) {
+    const n = Math.floor(samples.length / block);
+    const out = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      let s = 0;
+      for (let j = 0; j < block; j++) {
+        const x = samples[i * block + j];
+        s += x * x;
+      }
+      out[i] = Math.sqrt(s / block);
+    }
+    return out;
+  }
+  function estimateLag(a, b, maxLag) {
+    const n = Math.min(a.length, b.length);
+    let best = { lag: 0, corr: -1 };
+    for (let lag = -maxLag; lag <= maxLag; lag++) {
+      const lo = Math.max(0, -lag);
+      const hi = Math.min(n, n - lag);
+      const m = hi - lo;
+      if (m < 50) continue;
+      let sa = 0, sb = 0;
+      for (let i = lo; i < hi; i++) {
+        sa += a[i];
+        sb += b[i + lag];
+      }
+      const ma = sa / m, mb = sb / m;
+      let num = 0, da = 0, db = 0;
+      for (let i = lo; i < hi; i++) {
+        const x = a[i] - ma, y = b[i + lag] - mb;
+        num += x * y;
+        da += x * x;
+        db += y * y;
+      }
+      const corr = da > 0 && db > 0 ? num / Math.sqrt(da * db) : 0;
+      if (corr > best.corr) best = { lag, corr };
+    }
+    return { lag: best.lag, corr: Math.max(0, best.corr) };
+  }
+  function estimateOffsetSeconds(origMono, altMono, rate, { windowSeconds = 30, maxLagSeconds = 0.3 } = {}) {
+    const block = Math.max(1, Math.round(rate / 1e3));
+    const binSeconds = block / rate;
+    const total = Math.min(origMono.length, altMono.length);
+    const start = Math.floor(Math.min(10 * rate, total * 0.2));
+    const end = Math.min(total, start + Math.floor(windowSeconds * rate));
+    if (end - start < rate * 2) return { offset: 0, corr: 0 };
+    const a = blockRms(origMono.subarray(start, end), block);
+    const b = blockRms(altMono.subarray(start, end), block);
+    const { lag, corr } = estimateLag(a, b, Math.round(maxLagSeconds / binSeconds));
+    const offset = lag * binSeconds;
+    if (corr < 0.6 || Math.abs(offset) < 4e-3) return { offset: 0, corr };
+    return { offset, corr };
+  }
+  function silentWav(seconds) {
+    const rate = 8e3;
+    const n = Math.max(1, Math.ceil(seconds * rate));
+    const bytes = new Uint8Array(44 + n);
+    const view = new DataView(bytes.buffer);
+    const tag = (offset, text) => {
+      for (let i = 0; i < text.length; i++) bytes[offset + i] = text.charCodeAt(i);
+    };
+    tag(0, "RIFF");
+    view.setUint32(4, 36 + n, true);
+    tag(8, "WAVE");
+    tag(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, rate, true);
+    view.setUint32(28, rate, true);
+    view.setUint16(32, 1, true);
+    view.setUint16(34, 8, true);
+    tag(36, "data");
+    view.setUint32(40, n, true);
+    bytes.fill(128, 44);
+    return bytes;
+  }
+  function assignMixFiles(names, { origHint = "", haveOrig = false, haveAlt = false } = {}) {
+    const list = (names || []).map((n) => String(n ?? ""));
+    const out = list.map(() => null);
+    const hint2 = nfc(origHint.split(/[\\/]/).filter(Boolean).pop() || "");
+    const tiers = list.map((n) => classifyName(n));
+    let altIdx = -1;
+    if (!haveAlt) {
+      let best = 9;
+      tiers.forEach((t, i) => {
+        if (t !== null && t < best) {
+          best = t;
+          altIdx = i;
+        }
+      });
+    }
+    if (altIdx >= 0) out[altIdx] = "alt";
+    if (!haveOrig) {
+      const rest = list.map((_, i) => i).filter((i) => i !== altIdx && tiers[i] === null);
+      const byHint = rest.find((i) => hint2 && nfc(list[i]) === hint2);
+      const pick = byHint !== void 0 ? byHint : rest.length === 1 ? rest[0] : -1;
+      if (pick >= 0) out[pick] = "orig";
+    }
+    if (!haveAlt && altIdx < 0) {
+      const rest = list.map((_, i) => i).filter((i) => out[i] === null && tiers[i] === null);
+      if ((haveOrig || out.includes("orig")) && rest.length === 1) out[rest[0]] = "alt";
+    }
+    return out;
+  }
+
+  // js/engine/audio-health.js
+  var nfc2 = (s) => String(s ?? "").trim().normalize("NFC");
+  var isUrl = (s) => /^https?:/i.test(s);
+  function stemKey(path) {
+    return baseName(nfc2(path)).replace(/\.[^.]+$/, "").toLowerCase();
+  }
+  var extOf = (p) => (String(p).match(/\.[^.]+$/) || [""])[0].toLowerCase();
+  var SIDES = ["library", "wishlist"];
+  function analyzeAudioHealth({ lists, files }) {
+    const fileList = Array.isArray(files) ? files : [];
+    const byPath = new Set(fileList.map((f) => nfc2(f.path)));
+    const byStem = /* @__PURE__ */ new Map();
+    for (const f of fileList) {
+      const k = stemKey(f.path);
+      if (!byStem.has(k)) byStem.set(k, []);
+      byStem.get(k).push(f);
+    }
+    const broken = [];
+    const noAudio = [];
+    const referenced = /* @__PURE__ */ new Set();
+    let songs = 0;
+    let checked = 0;
+    let urls2 = 0;
+    for (const listKey of SIDES) {
+      const list = lists && lists[listKey] && lists[listKey].songs || [];
+      for (const song2 of list) {
+        songs++;
+        const entries = (Array.isArray(song2.audioList) ? song2.audioList : []).map((v, index) => ({ value: String(v ?? ""), index })).filter((e) => e.value.trim());
+        if (!entries.length && listKey === "library") {
+          noAudio.push({ listKey, songId: song2.id, title: song2.title || "", artist: song2.artist || "" });
+        }
+        const ownKeys = new Set(entries.map((e) => nfc2(e.value)));
+        for (const { value, index } of entries) {
+          const key = nfc2(value);
+          if (isUrl(key)) {
+            urls2++;
+            continue;
+          }
+          checked++;
+          if (byPath.has(key)) {
+            referenced.add(key);
+            continue;
+          }
+          const same = (byStem.get(stemKey(key)) || []).filter((f) => !ownKeys.has(nfc2(f.path)));
+          const candidates = same.slice(0, 3).map((f) => {
+            const movedFolder = dirOf(nfc2(f.path)) !== dirOf(key);
+            const sameExt = extOf(f.path) === extOf(key);
+            const parts = [];
+            if (!sameExt) parts.push("\u526F\u6A94\u540D\u4E0D\u540C");
+            if (movedFolder) parts.push("\u642C\u4E86\u8CC7\u6599\u593E");
+            return { path: f.path, reason: `\u6A94\u540D\u76F8\u540C\u30FB${parts.join("\u3001") || "\u5927\u5C0F\u5BEB\u4E0D\u540C"}`, exact: true };
+          });
+          broken.push({
+            listKey,
+            songId: song2.id,
+            title: song2.title || "",
+            artist: song2.artist || "",
+            index,
+            value,
+            // 沒有資料夾的檔名，也可能是在電腦上用「選擇檔案」選的本機音檔（只存檔名），不一定是 NAS 路徑壞了
+            localHint: !key.includes("/") && !candidates.length,
+            candidates,
+            // 只有「恰好一個」檔名相同的才能被「全部改指向」批次套用；有好幾個要使用者自己挑
+            autoFix: candidates.length === 1
+          });
+        }
+      }
+    }
+    const derived = /* @__PURE__ */ new Set();
+    for (const ref of referenced) for (const c of sameNameCandidates(ref)) derived.add(nfc2(c.value));
+    const unused = fileList.filter((f) => {
+      const k = nfc2(f.path);
+      return !referenced.has(k) && !derived.has(k);
+    });
+    const groups = /* @__PURE__ */ new Map();
+    for (const f of fileList) {
+      const k = `${baseName(nfc2(f.path)).toLowerCase()}\0${f.size}`;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(f);
+    }
+    const duplicates = [...groups.values()].filter((g) => g.length > 1).map((g) => ({ name: baseName(g[0].path), size: g[0].size, paths: g.map((f) => f.path) })).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+    return { summary: { songs, checked, urls: urls2, files: fileList.length }, broken, noAudio, unused, duplicates };
+  }
+  function repairAudioEntry(song2, index, oldValue, newValue) {
+    if (!song2 || !Array.isArray(song2.audioList)) return { ok: false, reason: "no-song" };
+    if (song2.audioList[index] !== oldValue) return { ok: false, reason: "changed" };
+    const target = String(newValue ?? "").trim();
+    if (!target || isUrl(target)) return { ok: false, reason: "invalid" };
+    const oldKey = oldValue.trim();
+    if (song2.lyricOffsets && typeof song2.lyricOffsets === "object" && Object.prototype.hasOwnProperty.call(song2.lyricOffsets, oldKey)) {
+      if (!Object.prototype.hasOwnProperty.call(song2.lyricOffsets, target)) song2.lyricOffsets[target] = song2.lyricOffsets[oldKey];
+      delete song2.lyricOffsets[oldKey];
+    }
+    const dupAt = song2.audioList.findIndex((v, i) => i !== index && nfc2(v) === nfc2(target));
+    if (dupAt >= 0) {
+      song2.audioList.splice(index, 1);
+      if (song2.audioList.length === 0) song2.audioList = [""];
+      return { ok: true, mode: "merged" };
+    }
+    song2.audioList[index] = target;
+    return { ok: true, mode: "replaced" };
+  }
+
   // js/engine/practice-queue.js
   var PRACTICE_MODE_DEFAULT = Object.freeze({ shuffle: false, loop: false, interval: false });
   var LEGACY_MODES = {
@@ -3601,12 +4163,437 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return h > 0 ? `${h}:${two(m)}:${two(sec)}` : `${m}:${two(sec)}`;
   }
 
+  // js/engine/practice-sets.js
+  var MAX_PRACTICE_SETS = 50;
+  var MAX_SET_NAME_LENGTH = 30;
+  var MAX_ITEMS_PER_SET = 2e3;
+  var str = (v) => typeof v === "string" ? v : "";
+  var nameKey = (name) => String(name ?? "").normalize("NFKC").trim().toLowerCase();
+  var songKey = (title, artist) => `${str(title).normalize("NFC").trim()}\0${str(artist).normalize("NFC").trim()}`;
+  function normalizeItem(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const id = str(raw.id);
+    const title = str(raw.title);
+    if (!id && !title) return null;
+    return { id, title, artist: str(raw.artist) };
+  }
+  function normalizeSet(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const id = str(raw.id);
+    const name = str(raw.name).trim().slice(0, MAX_SET_NAME_LENGTH);
+    if (!id || !name) return null;
+    const items = (Array.isArray(raw.items) ? raw.items : []).slice(0, MAX_ITEMS_PER_SET).map(normalizeItem).filter(Boolean);
+    const savedAt = Number.isFinite(raw.savedAt) ? raw.savedAt : 0;
+    return { id, name, savedAt, items };
+  }
+  function normalizePracticeSets(value) {
+    let v = value;
+    if (typeof v === "string") {
+      try {
+        v = JSON.parse(v);
+      } catch {
+        return [];
+      }
+    }
+    if (!Array.isArray(v)) return [];
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const raw of v) {
+      const set = normalizeSet(raw);
+      if (!set || seen.has(set.id)) continue;
+      seen.add(set.id);
+      out.push(set);
+      if (out.length >= MAX_PRACTICE_SETS) break;
+    }
+    return out;
+  }
+  function serializePracticeSets(sets2) {
+    return JSON.stringify(normalizePracticeSets(sets2));
+  }
+  function itemsOfSongs(songs) {
+    return (songs || []).map((s) => ({ id: str(s.id), title: str(s.title), artist: str(s.artist) }));
+  }
+  function makeSetId(now = Date.now(), rng = Math.random) {
+    return `ps_${now.toString(36)}_${Math.floor(rng() * 1679616).toString(36).padStart(4, "0")}`;
+  }
+  function validateSetName(name, sets2, exceptId = null) {
+    const trimmed = String(name ?? "").trim();
+    if (!trimmed) return { ok: false, name: trimmed, error: "\u8ACB\u8F38\u5165\u540D\u7A31" };
+    if (trimmed.length > MAX_SET_NAME_LENGTH) return { ok: false, name: trimmed, error: `\u540D\u7A31\u6700\u591A ${MAX_SET_NAME_LENGTH} \u500B\u5B57` };
+    const key = nameKey(trimmed);
+    if ((sets2 || []).some((s) => s.id !== exceptId && nameKey(s.name) === key)) {
+      return { ok: false, name: trimmed, error: "\u5DF2\u7D93\u6709\u540C\u540D\u7684\u5099\u7528\u6B4C\u55AE" };
+    }
+    return { ok: true, name: trimmed, error: "" };
+  }
+  function defaultSetName(sets2) {
+    for (let n = 1; ; n++) {
+      const name = `\u5099\u7528\u6B4C\u55AE ${n}`;
+      if (!(sets2 || []).some((s) => nameKey(s.name) === nameKey(name))) return name;
+    }
+  }
+  function resolvePracticeSet(set, songs) {
+    const items = set?.items || [];
+    const list = songs || [];
+    const byId = new Map(list.map((s) => [s.id, s]));
+    const used = /* @__PURE__ */ new Set();
+    const slots = new Array(items.length).fill(null);
+    items.forEach((item, i) => {
+      const song2 = item.id ? byId.get(item.id) : null;
+      if (song2 && !used.has(song2.id)) {
+        slots[i] = song2;
+        used.add(song2.id);
+      }
+    });
+    const pool2 = /* @__PURE__ */ new Map();
+    for (const s of list) {
+      if (used.has(s.id)) continue;
+      const key = songKey(s.title, s.artist);
+      if (!pool2.has(key)) pool2.set(key, []);
+      pool2.get(key).push(s);
+    }
+    items.forEach((item, i) => {
+      if (slots[i] || !item.title) return;
+      const song2 = pool2.get(songKey(item.title, item.artist))?.shift();
+      if (song2) {
+        slots[i] = song2;
+        used.add(song2.id);
+      }
+    });
+    const matched = [];
+    const missing = [];
+    slots.forEach((song2, i) => {
+      if (song2) matched.push(song2);
+      else missing.push(items[i]);
+    });
+    return { matched, missing };
+  }
+  function applyPracticeSet(songs, set) {
+    const { matched, missing } = resolvePracticeSet(set, songs);
+    for (const s of songs || []) s.practiceOrder = null;
+    matched.forEach((s, i) => {
+      s.practiceOrder = i + 1;
+    });
+    return { loaded: matched.length, missing };
+  }
+  function describeLoad(name, { loaded, missing }) {
+    const gone = missing.length;
+    if (loaded === 0 && gone > 0) return `\u300C${name}\u300D\u88E1\u7684 ${gone} \u9996\u6B4C\u90FD\u5DF2\u4E0D\u5728\u6B4C\u5EAB\uFF0C\u7DF4\u7FD2\u6B4C\u55AE\u73FE\u5728\u662F\u7A7A\u7684`;
+    return gone > 0 ? `\u5DF2\u8F09\u5165\u300C${name}\u300D\uFF08${loaded} \u9996\uFF0C${gone} \u9996\u5DF2\u4E0D\u5728\u6B4C\u5EAB\uFF09` : `\u5DF2\u8F09\u5165\u300C${name}\u300D\uFF08${loaded} \u9996\uFF09`;
+  }
+  function isQueueSaved(sets2, songs) {
+    const current = getPracticeSongs(songs);
+    if (current.length === 0) return true;
+    const ids = current.map((s) => s.id);
+    return (sets2 || []).some((set) => {
+      const { matched } = resolvePracticeSet(set, songs);
+      return matched.length === ids.length && matched.every((s, i) => s.id === ids[i]);
+    });
+  }
+  function countMissing(set, songs) {
+    return resolvePracticeSet(set, songs).missing.length;
+  }
+
+  // js/components/practice-sets.js
+  var $ = (selector) => document.querySelector(selector);
+  var deps = null;
+  var ui = { open: false, menuId: null, sig: "" };
+  function sets() {
+    return normalizePracticeSets(deps.getSets());
+  }
+  function queue() {
+    return getPracticeSongs(deps.getLibrarySongs());
+  }
+  function toast(text) {
+    document.querySelectorAll(".sync-toast").forEach((e) => e.remove());
+    const el3 = document.createElement("div");
+    el3.className = "sync-toast";
+    el3.textContent = text;
+    document.body.appendChild(el3);
+    setTimeout(() => el3.remove(), 3200);
+  }
+  function persist(next) {
+    if (deps.saveSets(serializePracticeSets(next))) return true;
+    toast("\u5099\u7528\u6B4C\u55AE\u5B58\u4E0D\u9032\u53BB\uFF08\u700F\u89BD\u5668\u7684\u5132\u5B58\u7A7A\u9593\u5DF2\u6EFF\u6216\u88AB\u505C\u7528\uFF09");
+    return false;
+  }
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== void 0) node.textContent = text;
+    return node;
+  }
+  function textButton(label, className, onClick, { disabled = false, title = "" } = {}) {
+    const b = el("button", className, label);
+    b.type = "button";
+    b.disabled = disabled;
+    if (title) b.title = title;
+    b.addEventListener("click", onClick);
+    return b;
+  }
+  function signature(list, queueLen) {
+    const songs = deps.getLibrarySongs();
+    return JSON.stringify([ui.open, ui.menuId, queueLen, list.map((s) => [s.id, s.name, s.items.length, countMissing(s, songs)])]);
+  }
+  function renderPracticeSets() {
+    const wrap = $("#practiceSets");
+    if (!wrap || !deps) return;
+    const list = sets();
+    const queueLen = queue().length;
+    const sig = signature(list, queueLen);
+    if (sig === ui.sig) return;
+    ui.sig = sig;
+    const toggle2 = $("#psToggleBtn");
+    toggle2.setAttribute("aria-expanded", ui.open ? "true" : "false");
+    $("#psToggleCount").textContent = `\uFF08${list.length}\uFF09`;
+    $("#psToggleArrow").textContent = ui.open ? "\u25B4" : "\u25BE";
+    const card = $("#psCard");
+    card.classList.toggle("hidden", !ui.open);
+    card.textContent = "";
+    if (!ui.open) return;
+    const songs = deps.getLibrarySongs();
+    if (list.length === 0) {
+      const empty = el("div", "ps-empty");
+      empty.append("\u9084\u6C92\u6709\u5099\u7528\u6B4C\u55AE\u3002", document.createElement("br"), "\u628A\u76EE\u524D\u7684\u7DF4\u7FD2\u6B4C\u55AE", el("strong", "", "\u5B58\u8D77\u4F86"), "\uFF0C\u4E4B\u5F8C\u4E00\u9375\u63DB\u56DE\u4F86\u3002");
+      card.appendChild(empty);
+    }
+    for (const set of list) {
+      const missing = countMissing(set, songs);
+      const item = el("div", "ps-item");
+      const name = el("div", "ps-name");
+      name.appendChild(el("b", "", set.name));
+      name.appendChild(el("span", "", missing > 0 ? `${set.items.length} \u9996\uFF08${missing} \u9996\u5DF2\u4E0D\u5728\u6B4C\u5EAB\uFF09` : `${set.items.length} \u9996`));
+      item.appendChild(name);
+      item.appendChild(textButton("\u8F09\u5165", "ps-load", () => requestLoad(set.id), { title: `\u8F09\u5165\u300C${set.name}\u300D` }));
+      const more = textButton("\u22EF", "ps-more", () => {
+        ui.menuId = ui.menuId === set.id ? null : set.id;
+        renderPracticeSets();
+      }, { title: "\u66F4\u591A" });
+      more.setAttribute("aria-expanded", ui.menuId === set.id ? "true" : "false");
+      item.appendChild(more);
+      card.appendChild(item);
+      if (ui.menuId === set.id) {
+        const menu = el("div", "ps-menu");
+        menu.appendChild(textButton("\u91CD\u65B0\u547D\u540D", "ps-menu-btn", () => askRename(set.id)));
+        menu.appendChild(textButton(
+          "\u7528\u76EE\u524D\u7684\u8986\u84CB",
+          "ps-menu-btn",
+          () => askOverwrite(set.id),
+          { disabled: queueLen === 0, title: queueLen === 0 ? "\u76EE\u524D\u7684\u7DF4\u7FD2\u6B4C\u55AE\u662F\u7A7A\u7684" : "" }
+        ));
+        menu.appendChild(textButton("\u522A\u9664", "ps-menu-btn is-danger", () => askDelete(set.id)));
+        card.appendChild(menu);
+      }
+    }
+    const foot = el("div", "ps-foot");
+    foot.appendChild(textButton(
+      queueLen > 0 ? `\uFF0B \u628A\u76EE\u524D\u7684 ${queueLen} \u9996\u5B58\u6210\u5099\u7528\u6B4C\u55AE` : "\uFF0B \u5B58\u6210\u5099\u7528\u6B4C\u55AE",
+      "ps-save",
+      () => askSave(),
+      { disabled: queueLen === 0, title: queueLen === 0 ? "\u7DF4\u7FD2\u6B4C\u55AE\u662F\u7A7A\u7684\uFF0C\u6C92\u6709\u6771\u897F\u53EF\u4EE5\u5B58" : "" }
+    ));
+    card.appendChild(foot);
+  }
+  function forceRender() {
+    ui.sig = "";
+    renderPracticeSets();
+  }
+  var onDialogKey = null;
+  function closeDialog() {
+    $("#psDialog")?.classList.add("hidden");
+    if (onDialogKey) {
+      document.removeEventListener("keydown", onDialogKey);
+      onDialogKey = null;
+    }
+  }
+  function openDialog(cfg) {
+    const dialog = $("#psDialog");
+    $("#psDialogTitle").textContent = cfg.title;
+    const body = $("#psDialogBody");
+    body.textContent = "";
+    if (cfg.body) body.appendChild(el("p", "", cfg.body));
+    let input = null;
+    const error = el("p", "ps-error hidden");
+    if (cfg.input !== void 0) {
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "ps-input";
+      input.value = cfg.input;
+      input.maxLength = 60;
+      input.setAttribute("aria-label", "\u5099\u7528\u6B4C\u55AE\u540D\u7A31");
+      body.appendChild(input);
+      body.appendChild(error);
+    }
+    if (cfg.hint) body.appendChild(el("p", "ps-hint", cfg.hint));
+    const buttons = $("#psDialogButtons");
+    buttons.textContent = "";
+    let primary = null;
+    const submit = (btn) => {
+      error.classList.add("hidden");
+      const res = btn.run(input ? input.value : "");
+      if (res === false) return;
+      closeDialog();
+    };
+    for (const btn of cfg.buttons) {
+      const b = textButton(btn.label, "ps-dlg-btn" + (btn.kind ? ` is-${btn.kind}` : ""), () => submit(btn));
+      if (btn.kind === "primary") primary = { b, btn };
+      buttons.appendChild(b);
+    }
+    dialog._showError = (msg) => {
+      error.textContent = msg;
+      error.classList.remove("hidden");
+    };
+    if (onDialogKey) document.removeEventListener("keydown", onDialogKey);
+    onDialogKey = (e) => {
+      if (e.key === "Escape") {
+        closeDialog();
+        return;
+      }
+      if (e.key === "Enter" && input && document.activeElement === input && primary) {
+        e.preventDefault();
+        submit(primary.btn);
+      }
+    };
+    document.addEventListener("keydown", onDialogKey);
+    dialog.classList.remove("hidden");
+    if (input) {
+      input.focus();
+      input.select();
+    } else (primary?.b || buttons.querySelector("button"))?.focus();
+  }
+  var cancelBtn = () => ({ label: "\u53D6\u6D88", run: () => {
+  } });
+  function nameButton(label, exceptId, onOk) {
+    return {
+      label,
+      kind: "primary",
+      run: (value) => {
+        const check = validateSetName(value, sets(), exceptId);
+        if (!check.ok) {
+          $("#psDialog")._showError(check.error);
+          return false;
+        }
+        return onOk(check.name);
+      }
+    };
+  }
+  function askSave(afterSave = null) {
+    const count = queue().length;
+    if (count === 0) return;
+    openDialog({
+      title: "\u5B58\u6210\u5099\u7528\u6B4C\u55AE",
+      input: defaultSetName(sets()),
+      hint: `\u6703\u8A18\u4E0B\u76EE\u524D\u9019 ${count} \u9996\u8207\u9806\u5E8F\u3002\u4E4B\u5F8C\u6B4C\u5EAB\u88E1\u522A\u6389\u7684\u6B4C\uFF0C\u8F09\u5165\u6642\u6703\u81EA\u52D5\u7565\u904E\u3002`,
+      buttons: [cancelBtn(), nameButton("\u5132\u5B58", null, (name) => {
+        const next = [...sets(), { id: makeSetId(), name, savedAt: Date.now(), items: itemsOfSongs(queue()) }];
+        if (!persist(next)) return false;
+        ui.open = true;
+        forceRender();
+        toast(`\u5DF2\u5B58\u6210\u300C${name}\u300D\uFF08${count} \u9996\uFF09`);
+        if (afterSave) afterSave();
+      })]
+    });
+  }
+  function findSet(id) {
+    return sets().find((s) => s.id === id) || null;
+  }
+  function doLoad(id) {
+    const set = findSet(id);
+    if (!set) return;
+    const result = deps.applySet(set);
+    toast(describeLoad(set.name, result));
+  }
+  function requestLoad(id) {
+    const set = findSet(id);
+    if (!set) return;
+    if (isQueueSaved(sets(), deps.getLibrarySongs())) {
+      doLoad(id);
+      return;
+    }
+    const count = queue().length;
+    openDialog({
+      title: `\u8F09\u5165\u300C${set.name}\u300D\uFF1F`,
+      body: `\u76EE\u524D\u7684\u7DF4\u7FD2\u6B4C\u55AE\uFF08${count} \u9996\uFF09\u9084\u6C92\u5B58\u6210\u5099\u7528\u6B4C\u55AE\uFF0C\u8F09\u5165\u6703\u53D6\u4EE3\u5B83\u3002`,
+      buttons: [
+        cancelBtn(),
+        { label: "\u76F4\u63A5\u53D6\u4EE3", kind: "danger", run: () => {
+          doLoad(id);
+        } },
+        { label: "\u5148\u5B58\u8D77\u4F86", kind: "primary", run: () => {
+          setTimeout(() => askSave(() => doLoad(id)), 0);
+        } }
+      ]
+    });
+  }
+  function askRename(id) {
+    const set = findSet(id);
+    if (!set) return;
+    openDialog({
+      title: "\u91CD\u65B0\u547D\u540D",
+      input: set.name,
+      buttons: [cancelBtn(), nameButton("\u5132\u5B58", id, (name) => {
+        if (!persist(sets().map((s) => s.id === id ? { ...s, name } : s))) return false;
+        forceRender();
+      })]
+    });
+  }
+  function askOverwrite(id) {
+    const set = findSet(id);
+    const count = queue().length;
+    if (!set || count === 0) return;
+    openDialog({
+      title: `\u7528\u76EE\u524D\u7684\u7DF4\u7FD2\u6B4C\u55AE\u8986\u84CB\u300C${set.name}\u300D\uFF1F`,
+      body: `\u5099\u7528\u6B4C\u55AE\u88E1\u7684 ${set.items.length} \u9996\u6703\u88AB\u63DB\u6210\u76EE\u524D\u7684 ${count} \u9996\u3002`,
+      buttons: [cancelBtn(), {
+        label: "\u8986\u84CB",
+        kind: "danger",
+        run: () => {
+          const items = itemsOfSongs(queue());
+          if (!persist(sets().map((s) => s.id === id ? { ...s, items, savedAt: Date.now() } : s))) return false;
+          forceRender();
+          toast(`\u5DF2\u8986\u84CB\u300C${set.name}\u300D\uFF08${count} \u9996\uFF09`);
+        }
+      }]
+    });
+  }
+  function askDelete(id) {
+    const set = findSet(id);
+    if (!set) return;
+    openDialog({
+      title: `\u522A\u9664\u300C${set.name}\u300D\uFF1F`,
+      body: "\u53EA\u522A\u9019\u4EFD\u5099\u7528\u6B4C\u55AE\uFF0C\u4E0D\u5F71\u97FF\u6B4C\u5EAB\u88E1\u7684\u6B4C\uFF0C\u4E5F\u4E0D\u5F71\u97FF\u76EE\u524D\u7684\u7DF4\u7FD2\u6B4C\u55AE\u3002",
+      buttons: [cancelBtn(), {
+        label: "\u522A\u9664",
+        kind: "danger",
+        run: () => {
+          if (!persist(sets().filter((s) => s.id !== id))) return false;
+          if (ui.menuId === id) ui.menuId = null;
+          forceRender();
+        }
+      }]
+    });
+  }
+  function bindPracticeSets(d) {
+    deps = d;
+    $("#psToggleBtn")?.addEventListener("click", () => {
+      ui.open = !ui.open;
+      if (!ui.open) ui.menuId = null;
+      forceRender();
+    });
+    const dialog = $("#psDialog");
+    dialog?.addEventListener("click", (e) => {
+      if (e.target === dialog) closeDialog();
+    });
+    document.addEventListener("practicequeuerendered", renderPracticeSets);
+    forceRender();
+  }
+
   // js/engine/lyric-parser.js
   var SYNTAX = String.raw`\s\[\]{};`;
   var CLUSTER_EXT = String.raw`(?:\p{M}|\p{Emoji_Modifier}|[\u{E0020}-\u{E007F}]|\u200D[^${SYNTAX}])`;
   var ATTACHABLE_CLUSTER = String.raw`\p{Regional_Indicator}{2}|[^${SYNTAX}]${CLUSTER_EXT}*`;
-  function splitClusters(str) {
-    return String(str ?? "").match(new RegExp(`${ATTACHABLE_CLUSTER}|[\\s\\S]`, "gu")) ?? [];
+  function splitClusters(str2) {
+    return String(str2 ?? "").match(new RegExp(`${ATTACHABLE_CLUSTER}|[\\s\\S]`, "gu")) ?? [];
   }
   function parseLineToTokens(raw) {
     const tokens = [];
@@ -4649,7 +5636,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       hl = -1;
     };
     const paintHighlight = () => {
-      [...box?.children ?? []].forEach((el2, i) => el2.classList.toggle("hl", i === hl));
+      [...box?.children ?? []].forEach((el3, i) => el3.classList.toggle("hl", i === hl));
     };
     const pick = (text) => {
       close();
@@ -4739,6 +5726,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
           check();
           notify();
         });
+        input.addEventListener("click", copyReadOnlyFieldOnClick);
         check();
         return { input, check };
       };
@@ -4815,19 +5803,19 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const audioLocked = options.audioLocked !== void 0 ? options.audioLocked : locked;
     const form = document.querySelector("#detailForm");
     if (!form) return;
-    form.querySelectorAll('input[type="text"], textarea').forEach((el2) => {
-      if (el2.dataset.audioRow) return;
-      el2.readOnly = locked;
+    form.querySelectorAll('input[type="text"], textarea').forEach((el3) => {
+      if (el3.dataset.audioRow) return;
+      el3.readOnly = locked;
     });
     form.querySelectorAll("button").forEach((btn) => {
       if (btn.id === "deleteSongBtn" || btn.id === "editSongBtn" || btn.dataset.embedBtn || btn.dataset.audioBtn || btn.dataset.audioPlay) return;
       btn.disabled = locked;
     });
-    form.querySelectorAll("[data-audio-row]").forEach((el2) => {
-      el2.readOnly = audioLocked;
+    form.querySelectorAll("[data-audio-row]").forEach((el3) => {
+      el3.readOnly = audioLocked;
     });
-    form.querySelectorAll("[data-audio-btn]").forEach((el2) => {
-      el2.disabled = audioLocked;
+    form.querySelectorAll("[data-audio-btn]").forEach((el3) => {
+      el3.disabled = audioLocked;
     });
     const dropZone = document.querySelector("#audioDropZone");
     if (dropZone) {
@@ -4934,7 +5922,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const panel = document.querySelector("#importPanel");
     const textarea = document.querySelector("#lyricsRawInput");
     const applyBtn = document.querySelector("#applyLyricsBtn");
-    const cancelBtn = document.querySelector("#cancelImportBtn");
+    const cancelBtn2 = document.querySelector("#cancelImportBtn");
     const autoFuriganaBtn = document.querySelector("#autoFuriganaBtn");
     toggleBtn?.addEventListener("click", () => {
       const song2 = getSong();
@@ -4945,7 +5933,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       }
       panel.classList.toggle("hidden");
     });
-    cancelBtn?.addEventListener("click", () => {
+    cancelBtn2?.addEventListener("click", () => {
       panel?.classList.add("hidden");
     });
     applyBtn?.addEventListener("click", () => {
@@ -5059,14 +6047,14 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const n = colors.length;
     return `linear-gradient(180deg,${colors.map((c, i) => `${c} ${(i * 100 / n).toFixed(2)}%,${c} ${((i + 1) * 100 / n).toFixed(2)}%`).join(",")})`;
   }
-  function applyRoleColor(el2, detected, song2) {
+  function applyRoleColor(el3, detected, song2) {
     if (!detected) return false;
     const display = getRoleDisplay(detected.roles, song2);
-    if (display.colors[0]) el2.style.setProperty("--role-color", display.colors[0]);
+    if (display.colors[0]) el3.style.setProperty("--role-color", display.colors[0]);
     if (display.colors.length < 2) return false;
-    el2.classList.add("multi-role");
-    el2.style.setProperty("--role-bands", verticalBands(display.colors));
-    el2.style.setProperty("--role-bands-bg", verticalBands(display.colors.map((c) => `color-mix(in srgb, ${c} var(--role-a), transparent)`)));
+    el3.classList.add("multi-role");
+    el3.style.setProperty("--role-bands", verticalBands(display.colors));
+    el3.style.setProperty("--role-bands-bg", verticalBands(display.colors.map((c) => `color-mix(in srgb, ${c} var(--role-a), transparent)`)));
     return true;
   }
   function wrapRoleBands(textWrap) {
@@ -5473,7 +6461,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
 
   // js/state/local-files.js
-  var nfc = (s) => String(s ?? "").trim().normalize("NFC");
+  var nfc3 = (s) => String(s ?? "").trim().normalize("NFC");
   function baseNameOf(path) {
     return String(path ?? "").split(/[\\/]/).filter(Boolean).pop() || "";
   }
@@ -5494,15 +6482,15 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var urls = /* @__PURE__ */ new WeakMap();
   function rememberFile(file, path = "") {
     if (!file || !file.name) return;
-    const key = nfc(file.name);
+    const key = nfc3(file.name);
     const list = pool.get(key) || [];
-    if (!list.some((x) => x.file === file)) list.push({ file, path: nfc(path || file.webkitRelativePath || "").replace(/\\/g, "/") });
+    if (!list.some((x) => x.file === file)) list.push({ file, path: nfc3(path || file.webkitRelativePath || "").replace(/\\/g, "/") });
     pool.set(key, list);
   }
   function findFile(sourceKey) {
-    const list = pool.get(nfc(baseNameOf(sourceKey)));
+    const list = pool.get(nfc3(baseNameOf(sourceKey)));
     if (!list || !list.length) return null;
-    const want = nfc(sourceKey).replace(/\\/g, "/");
+    const want = nfc3(sourceKey).replace(/\\/g, "/");
     const exact = list.find((x) => x.path && (x.path === want || x.path.endsWith("/" + want) || want.endsWith("/" + x.path)));
     return (exact || list[0]).file;
   }
@@ -5900,138 +6888,6 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     if (songId && v) activeBySong.set(songId, v);
   }
 
-  // js/engine/nas-browse.js
-  function dirOf(path) {
-    const i = String(path).lastIndexOf("/");
-    return i < 0 ? "" : path.slice(0, i);
-  }
-  function baseName(path) {
-    const i = String(path).lastIndexOf("/");
-    return i < 0 ? String(path) : path.slice(i + 1);
-  }
-  function filterAudioFiles(files, query) {
-    const q2 = searchKey(query);
-    if (!q2) return files;
-    return files.filter((f) => searchKey(f.path).includes(q2));
-  }
-  function groupAudioByFolder(files) {
-    const groups = [];
-    let current = null;
-    for (const f of files) {
-      const dir = dirOf(f.path);
-      if (!current || current.dir !== dir) {
-        current = { dir, files: [] };
-        groups.push(current);
-      }
-      current.files.push(f);
-    }
-    return groups;
-  }
-  function makeAddedChecker(audioList) {
-    const key = (v) => String(v ?? "").trim().normalize("NFC");
-    const set = new Set((audioList || []).map(key).filter(Boolean));
-    return (path) => set.has(key(path));
-  }
-  function formatFileSize(bytes) {
-    if (!Number.isFinite(bytes) || bytes < 0) return "";
-    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  }
-  var pad2 = (n) => String(n).padStart(2, "0");
-  function formatBackupTime(value, now = /* @__PURE__ */ new Date()) {
-    const d = new Date(value);
-    if (!value || Number.isNaN(d.getTime())) return "\u6642\u9593\u4E0D\u660E";
-    const hm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-    const dayStart = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-    const diffDays = Math.round((dayStart(now) - dayStart(d)) / 864e5);
-    if (diffDays === 0) return `\u4ECA\u5929 ${hm}`;
-    if (diffDays === 1) return `\u6628\u5929 ${hm}`;
-    const md = `${d.getMonth() + 1}/${d.getDate()}`;
-    return d.getFullYear() === now.getFullYear() ? `${md} ${hm}` : `${d.getFullYear()}/${md} ${hm}`;
-  }
-  function describeBackup(backup, current) {
-    if (backup.library == null || backup.wishlist == null) {
-      return { readable: false, counts: "\u9019\u4EFD\u5099\u4EFD\u7121\u6CD5\u8B80\u53D6", delta: "" };
-    }
-    const counts = `\u6211\u7684\u6B4C\u5EAB ${backup.library} \u9996\u30FB\u8A31\u9858\u6B4C\u55AE ${backup.wishlist} \u9996`;
-    const part = (label, diff) => diff === 0 ? null : `${label} ${diff > 0 ? "+" : "\u2212"}${Math.abs(diff)}`;
-    const parts = [part("\u6B4C\u5EAB", backup.library - current.library), part("\u8A31\u9858", backup.wishlist - current.wishlist)].filter(Boolean);
-    return { readable: true, counts, delta: parts.length ? `\uFF08${parts.join("\u3001")}\uFF09` : "\uFF08\u9996\u6578\u76F8\u540C\uFF09" };
-  }
-  function describeRestoreEffect(backup, current) {
-    const total = (c) => c.library + c.wishlist;
-    const diff = backup.library + backup.wishlist - total(current);
-    if (diff === 0) return "\u6B4C\u66F2\u7E3D\u6578\u8DDF\u73FE\u5728\u4E00\u6A23";
-    return `\u6B4C\u66F2\u7E3D\u6578\u6BD4\u73FE\u5728${diff > 0 ? "\u591A" : "\u5C11"} ${Math.abs(diff)} \u9996`;
-  }
-  function looseKey(s) {
-    return String(s ?? "").normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-  }
-  function bigrams(s) {
-    const out = /* @__PURE__ */ new Map();
-    for (let i = 0; i < s.length - 1; i++) {
-      const g = s.slice(i, i + 2);
-      out.set(g, (out.get(g) || 0) + 1);
-    }
-    return out;
-  }
-  function dice(a, b) {
-    if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
-    const ga = bigrams(a);
-    const gb = bigrams(b);
-    let overlap = 0;
-    for (const [g, n] of ga) overlap += Math.min(n, gb.get(g) || 0);
-    return 2 * overlap / (a.length - 1 + b.length - 1);
-  }
-  var ARTIST_SPLIT = /\s*(?:feat\.?|ft\.?|featuring|×|＆|&|\/|／|、|,|，|\+|＋)\s*|\s+(?:x|with)\s+/iu;
-  function splitArtistKeys(artist) {
-    const keys = [looseKey(artist), ...String(artist ?? "").split(ARTIST_SPLIT).map(looseKey)];
-    return [...new Set(keys.filter((k) => k.length >= 2))];
-  }
-  var SUGGEST_MIN_SCORE = 40;
-  var FUZZY_MIN_DICE = 0.7;
-  function suggestAudioFiles(files, song2, { limit = 5 } = {}) {
-    if (!song2) return [];
-    const titleKey = looseKey(song2.title);
-    const artistKeys = splitArtistKeys(song2.artist);
-    if (!titleKey && !artistKeys.length) return [];
-    const existing = (song2.audioList || []).map((v) => String(v ?? "").trim()).filter(Boolean);
-    const isAdded = makeAddedChecker(existing);
-    const existingDirs = new Set(existing.map(dirOf).filter(Boolean));
-    const out = [];
-    for (const file of files) {
-      if (isAdded(file.path)) continue;
-      const pathKey = looseKey(file.path);
-      const baseKey = looseKey(baseName(file.path).replace(/\.[^.]+$/, ""));
-      const reasons = [];
-      let score = 0;
-      if (titleKey) {
-        const exact = titleKey.length >= 2 ? pathKey.includes(titleKey) : baseKey === titleKey;
-        if (exact) {
-          score += 100;
-          reasons.push("\u6B4C\u540D\u76F8\u7B26");
-        } else if (titleKey.length >= 3) {
-          const d = dice(titleKey, baseKey);
-          if (d >= FUZZY_MIN_DICE) {
-            score += Math.round(60 * d);
-            reasons.push("\u6B4C\u540D\u8FD1\u4F3C");
-          }
-        }
-      }
-      if (artistKeys.some((k) => pathKey.includes(k))) {
-        score += 40;
-        reasons.push("\u6B4C\u624B\u76F8\u7B26");
-      }
-      if (score > 0 && existingDirs.has(dirOf(file.path))) {
-        score += 20;
-        reasons.push("\u540C\u8CC7\u6599\u593E");
-      }
-      if (score >= SUGGEST_MIN_SCORE) out.push({ file, score, reasons });
-    }
-    out.sort((a, b) => b.score - a.score || (a.file.path < b.file.path ? -1 : a.file.path > b.file.path ? 1 : 0));
-    return out.slice(0, limit);
-  }
-
   // js/components/nas-tools.js
   var STATUS_VIEW = {
     synced: { text: "\u5DF2\u540C\u6B65 NAS", color: "#3F8F5F" },
@@ -6048,16 +6904,16 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     if (err && err.status) return `\u8B80\u4E0D\u5230${what}\uFF08NAS \u5F8C\u7AEF\u56DE\u61C9 ${err.status}\uFF09\u3002\u8ACB\u5230 Container Manager \u770B\u5BB9\u5668\u65E5\u8A8C\u3002`;
     return `\u9023\u4E0D\u4E0A NAS \u5F8C\u7AEF\uFF0C\u8B80\u4E0D\u5230${what}\u3002\u8ACB\u78BA\u8A8D\u5BB9\u5668\u6709\u5728\u8DD1\uFF0C\u518D\u91CD\u8A66\u3002`;
   }
-  function el(tag, className = "", text = null) {
+  function el2(tag, className = "", text = null) {
     const node = document.createElement(tag);
     if (className) node.className = className;
     if (text !== null) node.textContent = text;
     return node;
   }
-  function openDialog(labelledBy) {
+  function openDialog2(labelledBy) {
     if (closeActiveDialog) closeActiveDialog();
-    const overlay = el("div", "fixed inset-0 bg-black/30 flex items-end sm:items-center justify-center z-50");
-    const panel = el("div", "bg-[color:var(--color-surface)] p-4 sm:p-5 w-full sm:w-[34rem] max-w-full sm:max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto");
+    const overlay = el2("div", "fixed inset-0 bg-black/30 flex items-end sm:items-center justify-center z-50");
+    const panel = el2("div", "bg-[color:var(--color-surface)] p-4 sm:p-5 w-full sm:w-[34rem] max-w-full sm:max-w-[94vw] shadow-lg max-h-[88vh] overflow-y-auto");
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "true");
     if (labelledBy) panel.setAttribute("aria-labelledby", labelledBy);
@@ -6080,64 +6936,69 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function titleBlock(title, id, note) {
     const wrap = document.createDocumentFragment();
-    const h = el("p", "font-serif-jp text-lg font-bold mb-1", title);
+    const h = el2("p", "font-serif-jp text-lg font-bold mb-1", title);
     h.id = id;
     wrap.appendChild(h);
-    if (note) wrap.appendChild(el("p", "text-xs text-[color:var(--muted)] mb-2", note));
+    if (note) wrap.appendChild(el2("p", "text-xs text-[color:var(--muted)] mb-2", note));
     return wrap;
   }
   function plainButton(text, extra = "") {
-    const b = el("button", `text-xs px-3 py-1.5 border border-[color:var(--line)] hover:bg-[color:var(--paper-deep)] ${extra}`, text);
+    const b = el2("button", `text-xs px-3 py-1.5 border border-[color:var(--line)] hover:bg-[color:var(--paper-deep)] ${extra}`, text);
     b.type = "button";
     return b;
   }
-  function mountHeader(deps5) {
+  function mountHeader(deps6) {
     const tourBtn = document.querySelector("#replayTourBtn");
     if (!tourBtn || document.querySelector("#nasStatusRow")) return;
-    const row = el("p", "text-xs mt-1 flex justify-center items-center gap-3 flex-wrap");
+    const row = el2("p", "text-xs mt-1 flex justify-center items-center gap-3 flex-wrap");
     row.id = "nasStatusRow";
     tourBtn.parentNode.insertBefore(row, tourBtn);
     tourBtn.classList.remove("mt-1");
     row.appendChild(tourBtn);
-    const status2 = el("span", "text-[color:var(--muted)] inline-flex items-center");
+    const status2 = el2("span", "text-[color:var(--muted)] inline-flex items-center");
     status2.id = "nasSyncStatus";
-    const dot = el("span", "inline-block w-[7px] h-[7px] rounded-full mr-1");
-    const label = el("span");
+    const dot = el2("span", "inline-block w-[7px] h-[7px] rounded-full mr-1");
+    const label = el2("span");
     status2.append(dot, label);
     row.appendChild(status2);
-    const versionsBtn = el("button", "text-[color:var(--accent)] underline underline-offset-2", "\u7248\u672C\u7D00\u9304");
+    const versionsBtn = el2("button", "text-[color:var(--accent)] underline underline-offset-2", "\u7248\u672C\u7D00\u9304");
     versionsBtn.id = "versionsBtn";
     versionsBtn.type = "button";
-    versionsBtn.addEventListener("click", () => openVersionsDialog(deps5));
+    versionsBtn.addEventListener("click", () => openVersionsDialog(deps6));
     row.appendChild(versionsBtn);
+    const healthBtn = el2("button", "text-[color:var(--accent)] underline underline-offset-2", "\u97F3\u6A94\u5065\u6AA2");
+    healthBtn.id = "audioHealthBtn";
+    healthBtn.type = "button";
+    healthBtn.addEventListener("click", () => openAudioHealthDialog(deps6));
+    row.appendChild(healthBtn);
     function paint(state2) {
       const view = STATUS_VIEW[state2] || STATUS_VIEW.synced;
       dot.style.background = view.color;
       label.textContent = view.text;
       status2.dataset.state = state2;
     }
-    paint(deps5.onSyncStatus(paint));
+    paint(deps6.onSyncStatus(paint));
   }
-  async function openVersionsDialog(deps5) {
-    const { panel, close } = openDialog("versionsTitle");
+  async function openVersionsDialog(deps6) {
+    const { panel, close } = openDialog2("versionsTitle");
     panel.appendChild(titleBlock("\u7248\u672C\u7D00\u9304", "versionsTitle"));
-    const body = el("div");
+    const body = el2("div");
     panel.appendChild(body);
-    body.appendChild(el("p", "text-sm text-[color:var(--muted)]", "\u8B80\u53D6\u4E2D\u2026"));
+    body.appendChild(el2("p", "text-sm text-[color:var(--muted)]", "\u8B80\u53D6\u4E2D\u2026"));
     let backups;
     try {
-      backups = await deps5.fetchBackups();
+      backups = await deps6.fetchBackups();
     } catch (err) {
-      body.replaceChildren(el("p", "text-sm leading-relaxed", loadFailureMessage(err, "\u7248\u672C\u7D00\u9304")), footer(close));
+      body.replaceChildren(el2("p", "text-sm leading-relaxed", loadFailureMessage(err, "\u7248\u672C\u7D00\u9304")), footer(close));
       return;
     }
     function footer(onClose, extra) {
-      const f = el("div", "mt-3 flex justify-end gap-2");
+      const f = el2("div", "mt-3 flex justify-end gap-2");
       if (extra) f.appendChild(extra);
       const logBtn = plainButton("\u4E0B\u8F09\u4FEE\u6539\u7D00\u9304", "mr-auto text-[color:var(--muted)]");
       logBtn.addEventListener("click", () => {
-        const blob = new Blob([JSON.stringify(deps5.getDiagnostics ? deps5.getDiagnostics() : {}, null, 1)], { type: "application/json" });
-        const a = el("a");
+        const blob = new Blob([JSON.stringify(deps6.getDiagnostics ? deps6.getDiagnostics() : {}, null, 1)], { type: "application/json" });
+        const a = el2("a");
         a.href = URL.createObjectURL(blob);
         a.download = `uta-note-change-log-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 19).replace(/[:T]/g, "-")}.json`;
         a.click();
@@ -6150,28 +7011,28 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       return f;
     }
     function showList() {
-      const counts = deps5.getCounts();
+      const counts = deps6.getCounts();
       body.replaceChildren();
-      body.appendChild(el(
+      body.appendChild(el2(
         "p",
         "text-xs text-[color:var(--muted)] mb-2",
         backups.length ? `NAS \u4E0A\u4FDD\u7559\u4E86 ${backups.length} \u4EFD\u820A\u7248\uFF08\u6BCF\u6B21\u8986\u5BEB\u524D\u81EA\u52D5\u7559\u4E0B\uFF0C\u6700\u65B0 60 \u4EFD\uFF0B\u6700\u8FD1 30 \u5929\u6BCF\u5929\u6700\u5F8C\u4E00\u4EFD\uFF09\u3002` : "\u9084\u6C92\u6709\u820A\u7248\uFF1A\u6B4C\u5EAB\u7B2C\u4E00\u6B21\u88AB\u8986\u5BEB\u4E4B\u5F8C\u624D\u6703\u51FA\u73FE\u3002"
       ));
-      const list = el("div", "border border-[color:var(--line)]");
-      const current = el("div", "flex items-center gap-2 px-2.5 py-2 text-sm bg-[color:var(--paper-deep)]");
-      const currentText = el("div", "flex-1 min-w-0");
-      currentText.append(el("b", "", "\u76EE\u524D\u7248\u672C"));
-      currentText.append(el("br"), el("span", "text-xs text-[color:var(--muted)]", `\u6211\u7684\u6B4C\u5EAB ${counts.library} \u9996\u30FB\u8A31\u9858\u6B4C\u55AE ${counts.wishlist} \u9996`));
-      const pill = el("span", "text-[11px] px-2 border border-[color:var(--accent)] text-[color:var(--accent)]", "\u4F7F\u7528\u4E2D");
+      const list = el2("div", "border border-[color:var(--line)]");
+      const current = el2("div", "flex items-center gap-2 px-2.5 py-2 text-sm bg-[color:var(--paper-deep)]");
+      const currentText = el2("div", "flex-1 min-w-0");
+      currentText.append(el2("b", "", "\u76EE\u524D\u7248\u672C"));
+      currentText.append(el2("br"), el2("span", "text-xs text-[color:var(--muted)]", `\u6211\u7684\u6B4C\u5EAB ${counts.library} \u9996\u30FB\u8A31\u9858\u6B4C\u55AE ${counts.wishlist} \u9996`));
+      const pill = el2("span", "text-[11px] px-2 border border-[color:var(--accent)] text-[color:var(--accent)]", "\u4F7F\u7528\u4E2D");
       current.append(currentText, pill);
       list.appendChild(current);
       backups.forEach((b) => {
         const info = describeBackup(b, counts);
-        const row = el("div", "flex items-center gap-2 px-2.5 py-2 sm:py-2 text-sm border-t border-[color:var(--line)]");
-        const text = el("div", "flex-1 min-w-0");
-        text.append(el("span", "", formatBackupTime(b.updatedAt || b.time)));
-        text.append(el("br"));
-        const sub = el("span", "text-xs text-[color:var(--muted)]", `${info.counts} ${info.delta}`.trim());
+        const row = el2("div", "flex items-center gap-2 px-2.5 py-2 sm:py-2 text-sm border-t border-[color:var(--line)]");
+        const text = el2("div", "flex-1 min-w-0");
+        text.append(el2("span", "", formatBackupTime(b.updatedAt || b.time)));
+        text.append(el2("br"));
+        const sub = el2("span", "text-xs text-[color:var(--muted)]", `${info.counts} ${info.delta}`.trim());
         text.append(sub);
         const btn = plainButton("\u9084\u539F", "text-[color:var(--accent)] shrink-0 sm:py-1 py-1.5");
         btn.disabled = !info.readable;
@@ -6182,22 +7043,22 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       body.append(list, footer(close));
     }
     function showConfirm(b, info) {
-      const counts = deps5.getCounts();
+      const counts = deps6.getCounts();
       body.replaceChildren();
-      body.appendChild(el("p", "font-serif-jp text-lg font-bold mb-2", `\u9084\u539F\u5230\u300C${formatBackupTime(b.updatedAt || b.time)}\u300D\uFF1F`));
-      const p = el("p", "text-sm leading-relaxed");
-      p.append(`${info.counts}\uFF08${describeRestoreEffect(b, counts)}\uFF09\u3002`, el("br"));
-      p.append(el("span", "text-xs text-[color:var(--muted)]", "\u9084\u539F\u524D\u6703\u5148\u628A\u76EE\u524D\u9019\u4EFD\u5B58\u6210\u5FEB\u7167\uFF0C\u4E4B\u5F8C\u9084\u80FD\u9084\u539F\u56DE\u4F86\u3002\u5176\u4ED6\u88DD\u7F6E\u4E0B\u6B21\u958B\u555F\u6642\u6703\u8F09\u5165\u9084\u539F\u5F8C\u7684\u7248\u672C\u3002"));
+      body.appendChild(el2("p", "font-serif-jp text-lg font-bold mb-2", `\u9084\u539F\u5230\u300C${formatBackupTime(b.updatedAt || b.time)}\u300D\uFF1F`));
+      const p = el2("p", "text-sm leading-relaxed");
+      p.append(`${info.counts}\uFF08${describeRestoreEffect(b, counts)}\uFF09\u3002`, el2("br"));
+      p.append(el2("span", "text-xs text-[color:var(--muted)]", "\u9084\u539F\u524D\u6703\u5148\u628A\u76EE\u524D\u9019\u4EFD\u5B58\u6210\u5FEB\u7167\uFF0C\u4E4B\u5F8C\u9084\u80FD\u9084\u539F\u56DE\u4F86\u3002\u5176\u4ED6\u88DD\u7F6E\u4E0B\u6B21\u958B\u555F\u6642\u6703\u8F09\u5165\u9084\u539F\u5F8C\u7684\u7248\u672C\u3002"));
       body.appendChild(p);
-      if (deps5.hasUnsyncedChanges()) {
-        body.appendChild(el("p", "text-xs mt-2 text-[color:var(--seal)]", "\u9019\u500B\u700F\u89BD\u5668\u6709\u9084\u6C92\u9001\u4E0A NAS \u7684\u8B8A\u66F4\uFF0C\u6703\u4E00\u8D77\u88AB\u653E\u68C4\u3002"));
+      if (deps6.hasUnsyncedChanges()) {
+        body.appendChild(el2("p", "text-xs mt-2 text-[color:var(--seal)]", "\u9019\u500B\u700F\u89BD\u5668\u6709\u9084\u6C92\u9001\u4E0A NAS \u7684\u8B8A\u66F4\uFF0C\u6703\u4E00\u8D77\u88AB\u653E\u68C4\u3002"));
       }
-      const msg = el("p", "text-xs mt-2 text-[color:var(--seal)]");
+      const msg = el2("p", "text-xs mt-2 text-[color:var(--seal)]");
       body.appendChild(msg);
-      const buttons = el("div", "mt-4 flex justify-end gap-2");
+      const buttons = el2("div", "mt-4 flex justify-end gap-2");
       const cancel = plainButton("\u53D6\u6D88");
       cancel.addEventListener("click", showList);
-      const go = el("button", "text-xs px-3 py-1.5 text-[color:var(--color-on-accent)] bg-[color:var(--seal)]", "\u9084\u539F\u4E26\u91CD\u65B0\u6574\u7406");
+      const go = el2("button", "text-xs px-3 py-1.5 text-[color:var(--color-on-accent)] bg-[color:var(--seal)]", "\u9084\u539F\u4E26\u91CD\u65B0\u6574\u7406");
       go.type = "button";
       go.addEventListener("click", async () => {
         go.disabled = true;
@@ -6205,7 +7066,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         go.textContent = "\u9084\u539F\u4E2D\u2026";
         msg.textContent = "";
         try {
-          await deps5.restoreBackup(b.name);
+          await deps6.restoreBackup(b.name);
         } catch (err) {
           msg.textContent = err.message;
           go.disabled = false;
@@ -6213,21 +7074,216 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
           go.textContent = "\u9084\u539F\u4E26\u91CD\u65B0\u6574\u7406";
           return;
         }
-        body.replaceChildren(el("p", "text-sm", "\u9084\u539F\u5B8C\u6210\uFF0C\u91CD\u65B0\u6574\u7406\u4E2D\u2026"));
-        deps5.reload();
+        body.replaceChildren(el2("p", "text-sm", "\u9084\u539F\u5B8C\u6210\uFF0C\u91CD\u65B0\u6574\u7406\u4E2D\u2026"));
+        deps6.reload();
       });
       buttons.append(cancel, go);
       body.appendChild(buttons);
     }
     showList();
   }
-  function mountAudioPicker(deps5) {
+  function healthSection(title, countText, { open = false } = {}) {
+    const box = el2("details", "border border-[color:var(--line)] mb-2");
+    if (open) box.open = true;
+    const sum = el2("summary", "px-2.5 py-2 bg-[color:var(--paper-deep)] text-sm font-bold flex items-center gap-2 cursor-pointer");
+    const chev = el2("span", "text-xs", open ? "\u25BC" : "\u25B6");
+    sum.append(chev, title, el2("span", "font-normal text-xs text-[color:var(--muted)]", countText));
+    box.appendChild(sum);
+    box.addEventListener("toggle", () => {
+      chev.textContent = box.open ? "\u25BC" : "\u25B6";
+    });
+    return box;
+  }
+  function healthNote(text) {
+    return el2("div", "px-2.5 py-2 text-xs text-[color:var(--muted)] border-b border-[color:var(--line)] last:border-b-0", text);
+  }
+  async function openAudioHealthDialog(deps6) {
+    const { panel, close } = openDialog2("audioHealthTitle");
+    panel.appendChild(titleBlock("\u97F3\u6A94\u5065\u6AA2", "audioHealthTitle", "\u6BD4\u5C0D\u6B4C\u5EAB\u8207 NAS \u7684 music \u8CC7\u6599\u593E\u3002\u53EA\u6709\u6309\u300C\u6539\u6307\u5411\u300D\u624D\u6703\u6539\u6B4C\u66F2\uFF0C\u5176\u4ED6\u90FD\u53EA\u662F\u5217\u51FA\u4F86\u3002"));
+    const body = el2("div");
+    panel.appendChild(body);
+    let files = [];
+    let truncated = false;
+    let message = "";
+    function footer() {
+      const f = el2("div", "mt-3 flex justify-between items-center gap-2");
+      const again = plainButton("\u91CD\u65B0\u6AA2\u67E5");
+      again.addEventListener("click", () => run(true));
+      const done = el2("button", "text-xs px-4 py-2 sm:px-3 sm:py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]", "\u5B8C\u6210");
+      done.type = "button";
+      done.addEventListener("click", close);
+      f.append(again, done);
+      return f;
+    }
+    function repair(b, path) {
+      const result = deps6.repairAudioPath(b.listKey, b.songId, b.index, b.value, path);
+      message = result.ok ? "" : "\u9019\u4E00\u7B46\u5DF2\u7D93\u88AB\u6539\u904E\u4E86\uFF0C\u8ACB\u6309\u300C\u91CD\u65B0\u6AA2\u67E5\u300D\u3002";
+      render();
+      return result.ok;
+    }
+    function brokenSection(report) {
+      const list = report.broken;
+      const sec = healthSection("\u5931\u6548\u7684\u9023\u7D50", `${list.length} \u7B46`, { open: list.length > 0 });
+      if (!list.length) {
+        sec.appendChild(healthNote("\u6C92\u6709\u5931\u6548\u7684\u9023\u7D50\u3002"));
+        return sec;
+      }
+      const fixable = list.filter((b) => b.autoFix);
+      if (fixable.length) {
+        const bar = el2("div", "px-2.5 py-2 border-b border-[color:var(--line)] flex items-center justify-between gap-2");
+        bar.appendChild(el2("span", "text-xs text-[color:var(--muted)]", `\u627E\u5230\u6A94\u540D\u5B8C\u5168\u76F8\u540C\u7684 ${fixable.length} \u7B46`));
+        const all = el2("button", "text-xs px-3 py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)] shrink-0", `\u5168\u90E8\u6539\u6307\u5411\u9019 ${fixable.length} \u7B46`);
+        all.type = "button";
+        all.addEventListener("click", () => {
+          if (!window.confirm(`\u628A\u9019 ${fixable.length} \u7B46\u5931\u6548\u7684\u9023\u7D50\u6539\u6307\u5411\u6A94\u540D\u76F8\u540C\u7684\u6A94\u6848\uFF1F`)) return;
+          let failed2 = 0;
+          [...fixable].sort((a, b) => b.index - a.index).forEach((b) => {
+            const r = deps6.repairAudioPath(b.listKey, b.songId, b.index, b.value, b.candidates[0].path);
+            if (!r.ok) failed2++;
+          });
+          message = failed2 ? `\u6709 ${failed2} \u7B46\u6C92\u6539\u6210\uFF08\u5167\u5BB9\u5DF2\u7D93\u8B8A\u4E86\uFF09\uFF0C\u8ACB\u6309\u300C\u91CD\u65B0\u6AA2\u67E5\u300D\u3002` : "";
+          render();
+        });
+        bar.appendChild(all);
+        sec.appendChild(bar);
+      }
+      list.forEach((b) => {
+        const card = el2("div", "px-2.5 py-3 border-b border-[color:var(--line)] last:border-b-0");
+        const head = el2("div", "text-sm font-bold break-all", b.title || "\u672A\u547D\u540D\u6B4C\u66F2");
+        if (b.artist) head.append(" ", el2("span", "font-normal text-xs text-[color:var(--muted)]", b.artist));
+        if (b.listKey === "wishlist") head.append(" ", el2("span", "font-normal text-[10px] border border-[color:var(--line)] px-1 text-[color:var(--muted)]", "\u8A31\u9858\u6B4C\u55AE"));
+        const gone = el2("div", "text-xs mt-1 break-all text-[color:var(--seal)]", `\u2715 ${b.value}`);
+        const top = el2("div", "flex items-start justify-between gap-2");
+        const goSong = el2("button", "text-xs px-3 py-2 sm:py-1 border border-[color:var(--line)] shrink-0", "\u5230\u9019\u9996\u6B4C");
+        goSong.type = "button";
+        goSong.addEventListener("click", () => {
+          if (deps6.goToSong(b.listKey, b.songId)) close();
+        });
+        head.className += " min-w-0";
+        top.append(head, goSong);
+        card.append(top, gone);
+        if (b.candidates.length) {
+          b.candidates.forEach((c) => {
+            const row = el2("div", "mt-1.5 flex items-start gap-2");
+            const text = el2("div", "flex-1 min-w-0 text-xs break-all");
+            text.append(`\u2192 ${c.path} `, el2("span", "text-[10px] border border-[color:var(--accent)] text-[color:var(--accent)] px-1.5 ml-1 whitespace-nowrap", c.reason));
+            const go = el2("button", "text-xs px-3 py-2 sm:py-1 border border-[color:var(--accent)] text-[color:var(--accent)] shrink-0", "\u6539\u6307\u5411");
+            go.type = "button";
+            go.addEventListener("click", () => repair(b, c.path));
+            row.append(text, go);
+            card.appendChild(row);
+          });
+        } else {
+          const row = el2("div", "mt-1.5 flex items-start gap-2");
+          row.appendChild(el2(
+            "div",
+            "flex-1 min-w-0 text-xs text-[color:var(--muted)]",
+            b.localHint ? "\u627E\u4E0D\u5230\u76F8\u8FD1\u7684\u6A94\u6848\u3002\u9019\u500B\u540D\u7A31\u6C92\u6709\u8CC7\u6599\u593E\uFF0C\u53EF\u80FD\u662F\u5728\u96FB\u8166\u4E0A\u7528\u300C\u9078\u64C7\u6A94\u6848\u300D\u9078\u7684\u672C\u6A5F\u97F3\u6A94\uFF0C\u4E0D\u4E00\u5B9A\u662F\u58DE\u4E86\u3002" : "\u627E\u4E0D\u5230\u76F8\u8FD1\u7684\u6A94\u6848\u3002\u53EF\u4EE5\u5230\u9019\u9996\u6B4C\u7528\u300C\u5F9E NAS \u6311\u9078\u2026\u300D\u91CD\u9078\uFF0C\u6216\u53D6\u6D88\u9019\u500B\u9023\u7D50\u3002"
+          ));
+          card.appendChild(row);
+        }
+        sec.appendChild(card);
+      });
+      return sec;
+    }
+    function noAudioSection(report) {
+      const list = report.noAudio;
+      const sec = healthSection("\u9084\u6C92\u6709\u97F3\u6A94\u7684\u6B4C", `${list.length} \u9996\uFF08\u53EA\u770B\u300C\u6211\u7684\u6B4C\u5EAB\u300D\uFF09`);
+      if (!list.length) sec.appendChild(healthNote("\u6BCF\u9996\u6B4C\u90FD\u6709\u97F3\u6A94\u3002"));
+      list.slice(0, MAX_VISIBLE_AUDIO).forEach((s) => {
+        const row = el2("div", "px-2.5 py-2 border-b border-[color:var(--line)] last:border-b-0 flex items-center justify-between gap-2");
+        const name = el2("div", "min-w-0 text-sm break-all", s.title || "\u672A\u547D\u540D\u6B4C\u66F2");
+        if (s.artist) name.append(" ", el2("span", "text-xs text-[color:var(--muted)]", s.artist));
+        const go = el2("button", "text-xs px-3 py-2 sm:py-1 border border-[color:var(--line)] shrink-0", "\u5230\u9019\u9996\u6B4C");
+        go.type = "button";
+        go.addEventListener("click", () => {
+          if (deps6.goToSong(s.listKey, s.songId)) close();
+        });
+        row.append(name, go);
+        sec.appendChild(row);
+      });
+      return sec;
+    }
+    function unusedSection(report) {
+      const list = report.unused;
+      const sec = healthSection("\u6C92\u88AB\u7528\u5230\u7684\u97F3\u6A94", `${list.length} \u500B`, { open: list.length > 0 });
+      if (truncated) {
+        sec.appendChild(healthNote("\u8CC7\u6599\u593E\u592A\u5927\uFF0C\u53EA\u6383\u5230\u524D\u9762\u4E00\u90E8\u5206\uFF0C\u9019\u88E1\u7684\u7D50\u679C\u4E0D\u5B8C\u6574\u3002"));
+        return sec;
+      }
+      if (!list.length) {
+        sec.appendChild(healthNote("\u6BCF\u500B\u97F3\u6A94\u90FD\u6709\u88AB\u7528\u5230\u3002"));
+        return sec;
+      }
+      sec.appendChild(healthNote("\u5C0E\u97F3\uFF0F\u4F34\u594F\uFF0Finstrument \u7248\u672C\u4E0D\u7B97\uFF08\u6DF7\u97F3\u9215\u6703\u81EA\u5DF1\u627E\uFF09\u3002\u9019\u88E1\u4E0D\u6703\u522A\u6A94\uFF0C\u53EA\u662F\u5217\u51FA\u4F86\u3002"));
+      groupAudioByFolder(list.slice(0, MAX_VISIBLE_AUDIO)).forEach((group) => {
+        sec.appendChild(el2("div", "px-2.5 py-1 text-xs bg-[color:var(--paper-deep)] border-b border-[color:var(--line)]", group.dir || "\uFF08\u6700\u4E0A\u5C64\uFF09"));
+        group.files.forEach((f) => {
+          const row = el2("div", "px-2.5 py-2 text-sm border-b border-[color:var(--line)] last:border-b-0 flex justify-between gap-2");
+          row.append(el2("span", "break-all", baseName(f.path)), el2("span", "text-xs text-[color:var(--muted)] shrink-0", formatFileSize(f.size)));
+          sec.appendChild(row);
+        });
+      });
+      if (list.length > MAX_VISIBLE_AUDIO) sec.appendChild(healthNote(`\u53EA\u986F\u793A\u524D ${MAX_VISIBLE_AUDIO} \u500B\u3002`));
+      return sec;
+    }
+    function duplicateSection(report) {
+      const list = report.duplicates;
+      const sec = healthSection("\u7591\u4F3C\u91CD\u8907\u7684\u6A94\u6848", `${list.length} \u7D44\uFF08\u6A94\u540D\u8207\u5927\u5C0F\u90FD\u76F8\u540C\uFF09`);
+      if (!list.length) sec.appendChild(healthNote("\u6C92\u6709\u7591\u4F3C\u91CD\u8907\u7684\u6A94\u6848\u3002"));
+      list.slice(0, MAX_VISIBLE_AUDIO).forEach((g) => {
+        const box = el2("div", "px-2.5 py-2 border-b border-[color:var(--line)] last:border-b-0");
+        box.appendChild(el2("div", "text-sm break-all", `${g.name}\u3000${formatFileSize(g.size)}`));
+        g.paths.forEach((p) => box.appendChild(el2("div", "text-xs text-[color:var(--muted)] break-all", dirOf(p) || "\uFF08\u6700\u4E0A\u5C64\uFF09")));
+        sec.appendChild(box);
+      });
+      return sec;
+    }
+    function render() {
+      const report = analyzeAudioHealth({ lists: deps6.getLists(), files });
+      const tile = (n, label, alert) => {
+        const t = el2("div", "bg-[color:var(--color-surface)] py-2 text-center");
+        const num = el2("div", "text-lg font-bold", String(n));
+        if (alert && n > 0) num.style.color = "var(--seal)";
+        t.append(num, el2("div", "text-[11px] text-[color:var(--muted)]", label));
+        return t;
+      };
+      const tiles = el2("div", "grid grid-cols-3 gap-px bg-[color:var(--line)] border border-[color:var(--line)] mb-3");
+      tiles.append(tile(report.broken.length, "\u5931\u6548\u7684\u9023\u7D50", true), tile(report.noAudio.length, "\u9084\u6C92\u6709\u97F3\u6A94\u7684\u6B4C"), tile(truncated ? 0 : report.unused.length, "\u6C92\u88AB\u7528\u5230\u7684\u97F3\u6A94"));
+      const s = report.summary;
+      const info = el2(
+        "p",
+        "text-xs text-[color:var(--muted)] mb-3",
+        `\u6AA2\u67E5\u4E86 ${s.songs} \u9996\u6B4C\u3001${s.checked} \u7B46 NAS \u97F3\u6A94\u9023\u7D50${s.urls ? `\uFF08\u53E6\u6709 ${s.urls} \u7B46\u7DB2\u5740\u4E0D\u6AA2\u67E5\uFF09` : ""}\uFF0Cmusic \u8CC7\u6599\u593E\u5171 ${s.files} \u500B\u97F3\u6A94\u3002`
+      );
+      const nodes = [tiles, info];
+      if (message) nodes.push(el2("p", "text-xs mb-2 text-[color:var(--seal)]", message));
+      if (truncated) nodes.push(el2("p", "text-xs mb-2 text-[color:var(--seal)]", "\u8CC7\u6599\u593E\u592A\u5927\uFF0C\u53EA\u6383\u5230\u524D\u9762\u4E00\u90E8\u5206\uFF1A\u627E\u4E0D\u5230\u7684\u6A94\u6848\u53EF\u80FD\u53EA\u662F\u6C92\u6383\u5230\uFF0C\u6539\u6307\u5411\u524D\u8ACB\u5148\u78BA\u8A8D\u3002"));
+      nodes.push(brokenSection(report), noAudioSection(report), unusedSection(report), duplicateSection(report), footer());
+      body.replaceChildren(...nodes);
+    }
+    async function run(refresh) {
+      body.replaceChildren(el2("p", "text-sm text-[color:var(--muted)]", "\u6AA2\u67E5\u4E2D\u2026"));
+      message = "";
+      try {
+        const result = await deps6.fetchAudioList({ refresh });
+        files = result.files || [];
+        truncated = Boolean(result.truncated);
+      } catch (err) {
+        body.replaceChildren(el2("p", "text-sm leading-relaxed", loadFailureMessage(err, "\u97F3\u6A94\u6E05\u55AE")), footer());
+        return;
+      }
+      render();
+    }
+    run(false);
+  }
+  function mountAudioPicker(deps6) {
     const addBtn = document.querySelector("#addAudioFieldBtn");
     if (!addBtn || document.querySelector("#pickNasAudioBtn")) return;
-    const btn = el("button", "text-xs text-[color:var(--accent)] mt-1 ml-3 border border-[color:var(--accent)] px-2 py-0.5 disabled:opacity-40", "\u5F9E NAS \u6311\u9078\u2026");
+    const btn = el2("button", "text-xs text-[color:var(--accent)] mt-1 ml-3 border border-[color:var(--accent)] px-2 py-0.5 disabled:opacity-40", "\u5F9E NAS \u6311\u9078\u2026");
     btn.id = "pickNasAudioBtn";
     btn.type = "button";
-    btn.addEventListener("click", () => openAudioPicker(deps5));
+    btn.addEventListener("click", () => openAudioPicker(deps6));
     addBtn.after(btn);
     const mirror = () => {
       btn.disabled = addBtn.disabled;
@@ -6235,24 +7291,24 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     mirror();
     new MutationObserver(mirror).observe(addBtn, { attributes: true, attributeFilter: ["disabled"] });
   }
-  async function openAudioPicker(deps5) {
-    const song2 = deps5.getCurrentSong();
-    if (!song2 || deps5.isAudioLocked()) return;
-    const { panel, close } = openDialog("audioPickerTitle");
+  async function openAudioPicker(deps6) {
+    const song2 = deps6.getCurrentSong();
+    if (!song2 || deps6.isAudioLocked()) return;
+    const { panel, close } = openDialog2("audioPickerTitle");
     panel.appendChild(titleBlock(
       "\u5F9E NAS \u6311\u9078\u97F3\u6A94",
       "audioPickerTitle",
       `\u9EDE\u4E00\u9996\u5C31\u52A0\u9032\u300C${song2.title || "\u9019\u9996\u6B4C"}\u300D\u7684\u97F3\u6A94\u6E05\u55AE\uFF0C\u53EF\u4EE5\u9023\u7E8C\u9EDE\u591A\u9996\uFF1B\u5DF2\u52A0\u5165\u7684\u6253\u52FE\uFF0C\u8981\u79FB\u9664\u8ACB\u7528\u6B04\u4F4D\u65C1\u7684\u300C\xD7\u300D\u3002`
     ));
-    const search = el("input", "w-full border border-[color:var(--line)] px-2 text-base sm:text-sm mb-2 h-10 sm:h-auto sm:py-1.5");
+    const search = el2("input", "w-full border border-[color:var(--line)] px-2 text-base sm:text-sm mb-2 h-10 sm:h-auto sm:py-1.5");
     search.type = "search";
     search.placeholder = "\u641C\u5C0B\u6A94\u540D\u6216\u8CC7\u6599\u593E\u2026";
-    const status2 = el("p", "text-xs text-[color:var(--muted)] mb-1", "\u8B80\u53D6\u4E2D\u2026");
-    const list = el("div", "border border-[color:var(--line)] max-h-[48vh] overflow-y-auto");
+    const status2 = el2("p", "text-xs text-[color:var(--muted)] mb-1", "\u8B80\u53D6\u4E2D\u2026");
+    const list = el2("div", "border border-[color:var(--line)] max-h-[48vh] overflow-y-auto");
     list.style.display = "none";
-    const foot = el("div", "mt-3 flex justify-between items-center gap-2");
+    const foot = el2("div", "mt-3 flex justify-between items-center gap-2");
     const refresh = plainButton("\u91CD\u65B0\u6383\u63CF");
-    const done = el("button", "text-xs px-4 py-2 sm:px-3 sm:py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]", "\u5B8C\u6210");
+    const done = el2("button", "text-xs px-4 py-2 sm:px-3 sm:py-1.5 bg-[color:var(--accent)] text-[color:var(--color-on-accent)]", "\u5B8C\u6210");
     done.type = "button";
     done.addEventListener("click", close);
     foot.append(refresh, done);
@@ -6261,29 +7317,32 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     let files = [];
     let truncated = false;
     function groupHeader(text, strong = false) {
-      return el("div", `px-2.5 py-1.5 text-xs border-b border-[color:var(--line)] ${strong ? "bg-[color:var(--paper-deep)] font-bold" : "bg-[color:var(--paper-deep)]"}`, text);
+      return el2("div", `px-2.5 py-1.5 text-xs border-b border-[color:var(--line)] ${strong ? "bg-[color:var(--paper-deep)] font-bold" : "bg-[color:var(--paper-deep)]"}`, text);
     }
     function buildRow(f, isAdded, reasons = null) {
       const added = isAdded(f.path);
-      const row = el("button", "w-full flex items-center gap-2 px-2.5 py-3 sm:py-2 text-left text-sm border-b border-[color:var(--line)] last:border-b-0 hover:bg-[color:var(--paper-deep)] disabled:cursor-default disabled:hover:bg-transparent");
+      const row = el2("button", "w-full flex items-center gap-2 px-2.5 py-3 sm:py-2 text-left text-sm border-b border-[color:var(--line)] last:border-b-0 hover:bg-[color:var(--paper-deep)] disabled:cursor-default disabled:hover:bg-transparent");
       row.type = "button";
       row.disabled = added;
       row.title = f.path;
-      row.append(el("span", "w-3 text-[color:var(--accent)] shrink-0", added ? "\u2713" : ""));
-      const name = el("span", "flex-1 min-w-0 break-all");
+      row.append(el2("span", "w-3 text-[color:var(--accent)] shrink-0", added ? "\u2713" : ""));
+      const name = el2("span", "flex-1 min-w-0 break-all");
       name.append(baseName(f.path));
       if (reasons) {
         const dir = dirOf(f.path);
-        if (dir) name.append(el("br"), el("span", "text-[11px] text-[color:var(--muted)]", dir));
+        if (dir) name.append(el2("br"), el2("span", "text-[11px] text-[color:var(--muted)]", dir));
       }
       row.append(name);
-      if (reasons) {
-        reasons.forEach((r) => row.append(el("span", "text-[10px] border border-[color:var(--accent)] text-[color:var(--accent)] px-1.5 shrink-0", r)));
+      if (isIosRiskyAudio(f.path)) {
+        row.append(el2("span", "text-[10px] border border-[color:var(--seal)] text-[color:var(--seal)] px-1.5 shrink-0", "iPhone \u4E0A\u53EF\u80FD\u7121\u6CD5\u64AD\u653E"));
       }
-      if (added) row.append(el("span", "text-[10px] border border-[color:var(--line)] px-1.5 text-[color:var(--muted)] shrink-0", "\u5DF2\u52A0\u5165"));
-      else if (!reasons) row.append(el("span", "text-xs text-[color:var(--muted)] shrink-0", formatFileSize(f.size)));
+      if (reasons) {
+        reasons.forEach((r) => row.append(el2("span", "text-[10px] border border-[color:var(--accent)] text-[color:var(--accent)] px-1.5 shrink-0", r)));
+      }
+      if (added) row.append(el2("span", "text-[10px] border border-[color:var(--line)] px-1.5 text-[color:var(--muted)] shrink-0", "\u5DF2\u52A0\u5165"));
+      else if (!reasons) row.append(el2("span", "text-xs text-[color:var(--muted)] shrink-0", formatFileSize(f.size)));
       row.addEventListener("click", () => {
-        deps5.addAudioPaths([f.path]);
+        deps6.addAudioPaths([f.path]);
         render();
       });
       return row;
@@ -6303,7 +7362,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         list.appendChild(groupHeader("\u5168\u90E8\u97F3\u6A94", true));
       } else if (!search.value.trim() && hasClue && files.length) {
         list.appendChild(groupHeader("\u5EFA\u8B70\uFF08\u4F9D\u6B4C\u540D\u8207\u6B4C\u624B\uFF09", true));
-        list.appendChild(el(
+        list.appendChild(el2(
           "div",
           "px-2.5 py-2 text-xs text-[color:var(--muted)] border-b border-[color:var(--line)]",
           "\u6C92\u6709\u627E\u5230\u8DDF\u6B4C\u540D\u6216\u6B4C\u624B\u76F8\u7B26\u3001\u800C\u4E14\u9084\u6C92\u52A0\u5165\u7684\u6A94\u6848\uFF08\u5DF2\u52A0\u5165\u7684\u4E0D\u6703\u518D\u5EFA\u8B70\uFF09\u3002"
@@ -6326,7 +7385,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       status2.textContent = "\u8B80\u53D6\u4E2D\u2026";
       refresh.disabled = true;
       try {
-        const result = await deps5.fetchAudioList({ refresh: forceRefresh });
+        const result = await deps6.fetchAudioList({ refresh: forceRefresh });
         files = result.files || [];
         truncated = Boolean(result.truncated);
         render();
@@ -6348,12 +7407,12 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function mountResumePrompt() {
     const hint2 = document.querySelector("#lastAudioNameHint");
     if (!hint2 || document.querySelector("#remoteResumeBar")) return null;
-    const bar = el("div", "hidden items-center gap-2 flex-wrap text-xs mt-1");
+    const bar = el2("div", "hidden items-center gap-2 flex-wrap text-xs mt-1");
     bar.id = "remoteResumeBar";
-    const text = el("span", "text-[color:var(--ink)]");
-    const go = el("button", "px-2 py-1 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-[color:var(--color-on-accent)]", "\u63A5\u8457\u64AD");
+    const text = el2("span", "text-[color:var(--ink)]");
+    const go = el2("button", "px-2 py-1 border border-[color:var(--accent)] text-[color:var(--accent)] hover:bg-[color:var(--accent)] hover:text-[color:var(--color-on-accent)]", "\u63A5\u8457\u64AD");
     go.type = "button";
-    const skip = el("button", "px-2 py-1 text-[color:var(--muted)]", "\u7565\u904E");
+    const skip = el2("button", "px-2 py-1 text-[color:var(--muted)]", "\u7565\u904E");
     skip.type = "button";
     bar.append(text, go, skip);
     hint2.after(bar);
@@ -6382,8 +7441,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       hide
     };
   }
-  function bindNasTools(deps5) {
-    const full = { reload: () => window.location.reload(), ...deps5 };
+  function bindNasTools(deps6) {
+    const full = { reload: () => window.location.reload(), ...deps6 };
     mountHeader(full);
     mountAudioPicker(full);
     const prompt = mountResumePrompt();
@@ -6456,12 +7515,12 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     syncSearchClear();
   }
   function makeTagEl(tag, { solid = false, withX = false, tagName = "span", color = null } = {}) {
-    const el2 = document.createElement(tagName);
-    if (tagName === "button") el2.type = "button";
-    el2.className = "tag" + (solid ? " solid" : "");
-    el2.style.setProperty("--tc", color || tagCategoryColor(tag.category));
-    el2.textContent = withX ? `${tag.value} \xD7` : tag.value;
-    return el2;
+    const el3 = document.createElement(tagName);
+    if (tagName === "button") el3.type = "button";
+    el3.className = "tag" + (solid ? " solid" : "");
+    el3.style.setProperty("--tc", color || tagCategoryColor(tag.category));
+    el3.textContent = withX ? `${tag.value} \xD7` : tag.value;
+    return el3;
   }
   var MOBILE_QUERY = "(max-width:768px)";
   function positionTagPanel() {
@@ -6544,10 +7603,10 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     results.className = "tf-chips tf-artist-results";
     group.appendChild(results);
     const note = (text) => {
-      const el2 = document.createElement("div");
-      el2.className = "tf-artist-note";
-      el2.textContent = text;
-      return el2;
+      const el3 = document.createElement("div");
+      el3.className = "tf-artist-note";
+      el3.textContent = text;
+      return el3;
     };
     let current = [];
     const renderResults = () => {
@@ -6595,8 +7654,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     if (!show) {
       setTagPanelOpen(false);
       ["#tagFilterActive", "#tagFilterPanel"].forEach((sel) => {
-        const el2 = document.querySelector(sel);
-        if (el2) el2.innerHTML = "";
+        const el3 = document.querySelector(sel);
+        if (el3) el3.innerHTML = "";
       });
       document.querySelector("#tagFilterActive")?.classList.add("hidden");
       document.querySelector("#tagFilterSummary")?.classList.add("hidden");
@@ -7442,7 +8501,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         document.body.classList.add(DEMO_LYRIC_BTNS_CLASS);
       },
       getTarget: () => {
-        const btns = [document.querySelector("#lyricsFollowChip"), document.querySelector("#lyricsHomeBtn")].filter((el2) => el2 && el2.getBoundingClientRect().width > 0);
+        const btns = [document.querySelector("#lyricsFollowChip"), document.querySelector("#lyricsHomeBtn")].filter((el3) => el3 && el3.getBoundingClientRect().width > 0);
         return btns.length ? btns : document.querySelector("#lyricsArea");
       }
     },
@@ -7534,7 +8593,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var stepIndex = 0;
   var onEndCallback = null;
   function unionRect(elements) {
-    const rects = elements.filter(Boolean).map((el2) => el2.getBoundingClientRect()).filter((r) => r.width > 0 || r.height > 0);
+    const rects = elements.filter(Boolean).map((el3) => el3.getBoundingClientRect()).filter((r) => r.width > 0 || r.height > 0);
     if (rects.length === 0) return null;
     const left = Math.min(...rects.map((r) => r.left));
     const top = Math.min(...rects.map((r) => r.top));
@@ -7596,13 +8655,13 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     overlayEls.highlight.style.cssText = `left:${rect.left}px; top:${rect.top}px; width:${rect.width}px; height:${rect.height}px;`;
   }
   function renderPins(step) {
-    overlayEls.pins.forEach((el2) => el2.remove());
+    overlayEls.pins.forEach((el3) => el3.remove());
     overlayEls.pins = [];
     if (typeof step.getTriggers !== "function") return;
     const raw = step.getTriggers();
     const elements = (Array.isArray(raw) ? raw : [raw]).filter(Boolean);
-    elements.forEach((el2) => {
-      const rect = el2.getBoundingClientRect();
+    elements.forEach((el3) => {
+      const rect = el3.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return;
       const pin = document.createElement("div");
       pin.className = "tour-pin";
@@ -8204,9 +9263,9 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     btn.title = videos.length === 0 ? "\u9019\u9996\u6B4C\u6C92\u6709\u53EF\u5D4C\u5165\u64AD\u653E\u7684\u5F71\u7247\u7DB2\u5740\uFF08YouTube\uFF0Fbilibili\uFF0FGoogle \u96F2\u7AEF\u786C\u789F\uFF0F\u5F71\u7247\u6A94\uFF09" : "";
   }
   var currentSong2 = null;
-  function bindVideoPlayer(deps5) {
-    getPrefs = deps5.getPrefs;
-    setPrefs = deps5.setPrefs;
+  function bindVideoPlayer(deps6) {
+    getPrefs = deps6.getPrefs;
+    setPrefs = deps6.setPrefs;
     prefs = { x: null, y: null, size: "medium", lyrics: true, ...getPrefs() || {} };
     document.querySelector("#videoPlayerBtn")?.addEventListener("click", () => {
       if (winEl) closeWindow();
@@ -8273,20 +9332,20 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var loop = { mode: null, a: -1, b: -1, picking: null, timer: null, lastJump: 0 };
   var IFRAME_END_LEAD = 0.25;
   var IFRAME_PREROLL = 0.2;
-  var $ = (sel) => document.querySelector(sel);
+  var $2 = (sel) => document.querySelector(sel);
   var isBlank = (raw) => String(raw ?? "").trim() === "";
   function mediaElements() {
-    return [$("#localAudioPlayer"), $("#videoWindow video"), ...listClocks()].filter(Boolean);
+    return [$2("#localAudioPlayer"), $2("#videoWindow video"), ...listClocks()].filter(Boolean);
   }
   function activeMedia() {
     const els = mediaElements();
     if (lastPlayed && els.includes(lastPlayed) && lastPlayed.getAttribute("src")) return lastPlayed;
     return els.find((e) => !e.paused) || els.find((e) => e.getAttribute("src")) || null;
   }
-  var sourceKeyOf = (el2) => el2 && el2.dataset.sourceKey || "";
-  var sourceLabelOf = (el2) => el2 && el2.dataset.sourceLabel || "";
-  function offsetOf(el2) {
-    const key = sourceKeyOf(el2);
+  var sourceKeyOf = (el3) => el3 && el3.dataset.sourceKey || "";
+  var sourceLabelOf = (el3) => el3 && el3.dataset.sourceLabel || "";
+  function offsetOf(el3) {
+    const key = sourceKeyOf(el3);
     return key && song && song.lyricOffsets && Number.isFinite(song.lyricOffsets[key]) ? song.lyricOffsets[key] : 0;
   }
   function ensureTimes() {
@@ -8298,30 +9357,30 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return song.lyricTimes;
   }
   function lineEl(i) {
-    return $(`#lyricsArea [data-line-index="${i}"]`);
+    return $2(`#lyricsArea [data-line-index="${i}"]`);
   }
   function applyHighlight(idx) {
     currentIdx = idx;
-    document.querySelectorAll("#lyricsArea .lyric-line").forEach((el2) => {
-      const i = Number(el2.dataset.lineIndex);
-      el2.classList.toggle("is-current", i === idx && !isBlank(song && song.lyrics[i]));
-      el2.classList.toggle("is-past", idx >= 0 && i < idx && !isBlank(song && song.lyrics[i]));
+    document.querySelectorAll("#lyricsArea .lyric-line").forEach((el3) => {
+      const i = Number(el3.dataset.lineIndex);
+      el3.classList.toggle("is-current", i === idx && !isBlank(song && song.lyrics[i]));
+      el3.classList.toggle("is-past", idx >= 0 && i < idx && !isBlank(song && song.lyrics[i]));
     });
   }
   function lineVisible(i) {
-    const area = $("#lyricsArea");
-    const el2 = lineEl(i);
-    if (!area || !el2) return true;
+    const area = $2("#lyricsArea");
+    const el3 = lineEl(i);
+    if (!area || !el3) return true;
     const a = area.getBoundingClientRect();
-    const r = el2.getBoundingClientRect();
+    const r = el3.getBoundingClientRect();
     return r.top >= a.top && r.bottom <= a.bottom;
   }
   function scrollToLine(i, smooth = true) {
-    const area = $("#lyricsArea");
-    const el2 = lineEl(i);
-    if (!area || !el2) return;
+    const area = $2("#lyricsArea");
+    const el3 = lineEl(i);
+    if (!area || !el3) return;
     const a = area.getBoundingClientRect();
-    const r = el2.getBoundingClientRect();
+    const r = el3.getBoundingClientRect();
     const delta = r.top - a.top - (area.clientHeight - r.height) / 2;
     area.scrollTo({ top: Math.max(0, area.scrollTop + delta), behavior: smooth && !document.hidden ? "smooth" : "auto" });
   }
@@ -8329,7 +9388,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return Date.now() < userScrollUntil;
   }
   function updateChip() {
-    const chip = $("#lyricsFollowChip");
+    const chip = $2("#lyricsFollowChip");
     if (!chip) return;
     const show = followOn && currentIdx >= 0 && followPaused() && !lineVisible(currentIdx);
     chip.classList.toggle("hidden", !show);
@@ -8345,13 +9404,13 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return clone;
   }
   function fillStrip(idx) {
-    const strip = $("#videoWindow .video-window-lyrics");
+    const strip = $2("#videoWindow .video-window-lyrics");
     if (!strip) {
       lastStripKey = "";
       return;
     }
     const hasLyrics = !!song && hasTimeline(song.lyricTimes) && (song.lyrics || []).some((l) => !isBlank(l));
-    const wanted = hasLyrics && !$("#videoWindow")?.classList.contains("lyrics-off");
+    const wanted = hasLyrics && !$2("#videoWindow")?.classList.contains("lyrics-off");
     const wasHidden = strip.hidden;
     strip.hidden = !wanted;
     if (!wanted) {
@@ -8360,7 +9419,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       return;
     }
     const next = nextNonBlank(Math.max(idx, -1) + 1);
-    const furiganaHidden = $("#lyricsArea")?.classList.contains("furigana-hidden");
+    const furiganaHidden = $2("#lyricsArea")?.classList.contains("furigana-hidden");
     const key = `${song.id}|${idx}|${next}|${furiganaHidden}|${(song.lyrics || []).length}`;
     if (key === lastStripKey && strip.childElementCount) return;
     lastStripKey = key;
@@ -8383,14 +9442,14 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function update(force = false) {
     const times = song ? song.lyricTimes : null;
-    const el2 = activeMedia();
-    if (!song || !hasTimeline(times) || !el2) {
+    const el3 = activeMedia();
+    if (!song || !hasTimeline(times) || !el3) {
       if (currentIdx !== -1 || force) applyHighlight(-1);
       fillStrip(-1);
       updateChip();
       return;
     }
-    const idx = findLineIndex(times, el2.currentTime - offsetOf(el2));
+    const idx = findLineIndex(times, el3.currentTime - offsetOf(el3));
     const changed = idx !== currentIdx;
     if (changed || force) applyHighlight(idx);
     fillStrip(idx);
@@ -8406,19 +9465,19 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function tick() {
     raf = null;
     update();
-    const el2 = activeMedia();
-    if (el2 && !el2.paused && !el2.ended) raf = requestAnimationFrame(tick);
+    const el3 = activeMedia();
+    if (el3 && !el3.paused && !el3.ended) raf = requestAnimationFrame(tick);
   }
   function kick() {
     if (!raf) raf = requestAnimationFrame(tick);
   }
   function decorateLines() {
     document.querySelectorAll("#lyricsArea .lyric-time").forEach((e) => e.remove());
-    document.querySelectorAll("#lyricsArea .lyric-line").forEach((el2) => el2.classList.remove("tap-next", "has-time"));
+    document.querySelectorAll("#lyricsArea .lyric-line").forEach((el3) => el3.classList.remove("tap-next", "has-time"));
     if (!song) return;
     const times = ensureTimes();
-    document.querySelectorAll("#lyricsArea .lyric-line").forEach((el2) => {
-      const i = Number(el2.dataset.lineIndex);
+    document.querySelectorAll("#lyricsArea .lyric-line").forEach((el3) => {
+      const i = Number(el3.dataset.lineIndex);
       const isEnd = i === endMarkIndex();
       if (isBlank(song.lyrics[i]) && !isEnd) return;
       const t = times[i];
@@ -8430,7 +9489,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       label.title = isEnd ? "\u7D50\u675F\u4F4D\u7F6E\uFF08\u6700\u5F8C\u4E00\u53E5\u7684\u7D42\u9EDE\uFF09" : tap.on ? "\u9EDE\u4E00\u4E0B\u628A\u300C\u4E0B\u4E00\u500B\u8981\u6253\u7684\u884C\u300D\u79FB\u5230\u9019\u88E1" : "\u9EDE\u4E00\u4E0B\u8DF3\u5230\u9019\u4E00\u53E5";
       if (isNext) {
         label.innerHTML = '<span class="next-mark">\u25B6 \u4E0B\u4E00\u500B</span>';
-        el2.classList.add("tap-next");
+        el3.classList.add("tap-next");
       } else {
         label.textContent = (isEnd ? "\u7D50\u675F " : "") + (t === null ? "--:--" : formatTime(t));
       }
@@ -8440,68 +9499,68 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
           ' <button type="button" class="adj" data-adj="-0.1" title="\u63D0\u65E9 0.1 \u79D2">\u2212</button><button type="button" class="adj" data-adj="0.1" title="\u5EF6\u5F8C 0.1 \u79D2">+</button>'
         );
       }
-      el2.classList.add("has-time");
-      el2.appendChild(label);
+      el3.classList.add("has-time");
+      el3.appendChild(label);
     });
   }
-  function toast(text) {
+  function toast2(text) {
     document.querySelectorAll(".sync-toast").forEach((e) => e.remove());
-    const el2 = document.createElement("div");
-    el2.className = "sync-toast";
-    el2.textContent = text;
-    document.body.appendChild(el2);
-    setTimeout(() => el2.remove(), 2600);
+    const el3 = document.createElement("div");
+    el3.className = "sync-toast";
+    el3.textContent = text;
+    document.body.appendChild(el3);
+    setTimeout(() => el3.remove(), 2600);
   }
   function save() {
     handlers.onSaved(song);
   }
   function refreshPanel() {
-    const el2 = activeMedia();
-    const key = sourceKeyOf(el2);
-    const input = $("#syncOffsetInput");
-    if (input && document.activeElement !== input) input.value = String(roundOffset(offsetOf(el2)));
+    const el3 = activeMedia();
+    const key = sourceKeyOf(el3);
+    const input = $2("#syncOffsetInput");
+    if (input && document.activeElement !== input) input.value = String(roundOffset(offsetOf(el3)));
     const hasSource = !!key;
-    $("#syncPanel")?.querySelectorAll("[data-offset-step], #syncOffsetReset, #syncOffsetInput").forEach((b) => {
+    $2("#syncPanel")?.querySelectorAll("[data-offset-step], #syncOffsetReset, #syncOffsetInput").forEach((b) => {
       b.disabled = !hasSource;
     });
-    const label = $("#syncSourceLabel");
-    if (label) label.textContent = hasSource ? `\uFF08${sourceLabelOf(el2)}\uFF09` : "\uFF08\u5C1A\u672A\u9078\u64C7\u97F3\u6A94\u6216\u5F71\u7247\uFF09";
+    const label = $2("#syncSourceLabel");
+    if (label) label.textContent = hasSource ? `\uFF08${sourceLabelOf(el3)}\uFF09` : "\uFF08\u5C1A\u672A\u9078\u64C7\u97F3\u6A94\u6216\u5F71\u7247\uFF09";
     const times = song ? ensureTimes() : [];
     const total = song ? (song.lyrics || []).filter((l) => !isBlank(l)).length : 0;
     const done = times.filter((t, i) => t !== null && !isBlank(song.lyrics[i])).length;
-    const status2 = $("#syncStatus");
+    const status2 = $2("#syncStatus");
     if (status2) status2.textContent = done === 0 ? "\u5C1A\u672A\u6253\u8EF8" : `\u5DF2\u8A2D\u5B9A ${done}\uFF0F${total} \u884C`;
-    $("#syncUndoBtn")?.classList.toggle("hidden", !handlers.hasTimingUndo(song));
-    const followBtn = $("#syncFollowBtn");
+    $2("#syncUndoBtn")?.classList.toggle("hidden", !handlers.hasTimingUndo(song));
+    const followBtn = $2("#syncFollowBtn");
     if (followBtn) {
       followBtn.textContent = followOn ? "\u958B" : "\u95DC";
       followBtn.classList.toggle("active", followOn);
     }
-    const pane = $("#practicePane");
-    const open = !$("#syncPanel")?.classList.contains("hidden");
+    const pane = $2("#practicePane");
+    const open = !$2("#syncPanel")?.classList.contains("hidden");
     pane?.classList.toggle("sync-open", open);
     pane?.classList.toggle("sync-tap", tap.on);
-    pane?.classList.toggle("sync-source", !!el2 && !!song && hasTimeline(song.lyricTimes));
+    pane?.classList.toggle("sync-source", !!el3 && !!song && hasTimeline(song.lyricTimes));
     refreshLoopUi();
-    $("#syncNormalControls")?.classList.toggle("hidden", tap.on);
-    $("#syncTapControls")?.classList.toggle("hidden", !tap.on);
-    const btn = $("#syncPanelBtn");
+    $2("#syncNormalControls")?.classList.toggle("hidden", tap.on);
+    $2("#syncTapControls")?.classList.toggle("hidden", !tap.on);
+    const btn = $2("#syncPanelBtn");
     if (btn) {
       btn.textContent = `\u23F1 \u52D5\u614B\u6B4C\u8A5E ${open ? "\u25B4" : "\u25BE"}`;
       btn.setAttribute("aria-expanded", open ? "true" : "false");
     }
     if (tap.on) {
       const next = tap.next;
-      const src = el2 ? `${sourceLabelOf(el2) || "\u64AD\u653E\u4E2D"}\u3000${formatTime(el2.currentTime)}` : "\u6C92\u6709\u64AD\u653E\u4E2D\u7684\u4F86\u6E90";
-      const hint2 = $("#syncTapHint");
+      const src = el3 ? `${sourceLabelOf(el3) || "\u64AD\u653E\u4E2D"}\u3000${formatTime(el3.currentTime)}` : "\u6C92\u6709\u64AD\u653E\u4E2D\u7684\u4F86\u6E90";
+      const hint2 = $2("#syncTapHint");
       if (hint2) {
         hint2.textContent = next < 0 ? "" : next === endMarkIndex() ? `\u6700\u5F8C\u4E00\u53E5\u5531\u5B8C\u6642\u6309\uFF1A\u8A2D\u5B9A\u300C\u7D50\u675F\u4F4D\u7F6E\u300D\uFF08${src}\uFF09` : `\u4E0B\u4E00\u884C\uFF1A\u7B2C ${next + 1} \u884C\uFF08${src}\uFF09`;
       }
     }
   }
   function setOffset(value) {
-    const el2 = activeMedia();
-    const key = sourceKeyOf(el2);
+    const el3 = activeMedia();
+    const key = sourceKeyOf(el3);
     if (!song || !key) return;
     const v = clampOffset(value);
     if (v === 0) delete song.lyricOffsets[key];
@@ -8530,11 +9589,11 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function enterTap() {
     if (!song || (song.lyrics || []).every(isBlank)) {
-      toast("\u9019\u9996\u6B4C\u9084\u6C92\u6709\u6B4C\u8A5E\uFF0C\u8ACB\u5148\u5728\u300C\u7DE8\u8F2F\u6B4C\u8A5E\u539F\u59CB\u78BC\uFF0F\u532F\u5165\u300D\u65B0\u589E");
+      toast2("\u9019\u9996\u6B4C\u9084\u6C92\u6709\u6B4C\u8A5E\uFF0C\u8ACB\u5148\u5728\u300C\u7DE8\u8F2F\u6B4C\u8A5E\u539F\u59CB\u78BC\uFF0F\u532F\u5165\u300D\u65B0\u589E");
       return;
     }
     if (!activeMedia()) {
-      toast("\u8ACB\u5148\u9078\u64C7\u97F3\u6A94\uFF08\u5DE6\u5074\u8868\u55AE\u7684\u300C\u64AD\u653E\u300D\uFF09\u6216\u5D4C\u5165 NAS \u7684\u5F71\u7247\u6A94\uFF0C\u518D\u958B\u59CB\u6253\u8EF8");
+      toast2("\u8ACB\u5148\u9078\u64C7\u97F3\u6A94\uFF08\u5DE6\u5074\u8868\u55AE\u7684\u300C\u64AD\u653E\u300D\uFF09\u6216\u5D4C\u5165 NAS \u7684\u5F71\u7247\u6A94\uFF0C\u518D\u958B\u59CB\u6253\u8EF8");
       return;
     }
     const times = ensureTimes();
@@ -8555,17 +9614,17 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     decorateLines();
     refreshPanel();
     update(true);
-    if (message) toast(message);
+    if (message) toast2(message);
   }
   function stamp() {
     if (!tap.on || tap.next < 0) return;
-    const el2 = activeMedia();
-    if (!el2) {
-      toast("\u6C92\u6709\u64AD\u653E\u4E2D\u7684\u4F86\u6E90");
+    const el3 = activeMedia();
+    if (!el3) {
+      toast2("\u6C92\u6709\u64AD\u653E\u4E2D\u7684\u4F86\u6E90");
       return;
     }
     const times = ensureTimes();
-    times[tap.next] = Math.max(0, roundTime(el2.currentTime - offsetOf(el2)));
+    times[tap.next] = Math.max(0, roundTime(el3.currentTime - offsetOf(el3)));
     save();
     const following = nextTapLine(tap.next + 1);
     if (following < 0) {
@@ -8599,24 +9658,24 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function seekToLine(i) {
     const times = ensureTimes();
     const t = times[i];
-    const el2 = activeMedia() || $("#localAudioPlayer");
+    const el3 = activeMedia() || $2("#localAudioPlayer");
     if (t === null || t === void 0) return;
-    if (!el2 || !el2.getAttribute("src")) {
-      toast("\u8ACB\u5148\u9078\u64C7\u97F3\u6A94\u6216\u5D4C\u5165\u5F71\u7247\u6A94\uFF0C\u624D\u80FD\u8DF3\u5230\u9019\u4E00\u53E5");
+    if (!el3 || !el3.getAttribute("src")) {
+      toast2("\u8ACB\u5148\u9078\u64C7\u97F3\u6A94\u6216\u5D4C\u5165\u5F71\u7247\u6A94\uFF0C\u624D\u80FD\u8DF3\u5230\u9019\u4E00\u53E5");
       return;
     }
-    el2.currentTime = Math.max(0, t + offsetOf(el2));
-    lastPlayed = el2;
+    el3.currentTime = Math.max(0, t + offsetOf(el3));
+    lastPlayed = el3;
     userScrollUntil = 0;
     update(true);
   }
-  var isNativeMedia = (el2) => typeof HTMLMediaElement !== "undefined" && el2 instanceof HTMLMediaElement;
+  var isNativeMedia = (el3) => typeof HTMLMediaElement !== "undefined" && el3 instanceof HTMLMediaElement;
   function loopRangeNow() {
     return song && loop.a >= 0 ? loopRange(ensureTimes(), loop.a, loop.b) : null;
   }
   function applyLoopMarks() {
-    document.querySelectorAll("#lyricsArea .lyric-line.loop-range").forEach((el2) => el2.classList.remove("loop-range"));
-    $("#lyricsArea")?.classList.toggle("loop-picking", !!loop.picking);
+    document.querySelectorAll("#lyricsArea .lyric-line.loop-range").forEach((el3) => el3.classList.remove("loop-range"));
+    $2("#lyricsArea")?.classList.toggle("loop-picking", !!loop.picking);
     if (loop.a < 0 || loop.mode !== "line" && loop.mode !== "ab") return;
     const lo = Math.min(loop.a, loop.b);
     const hi = Math.max(loop.a, loop.b);
@@ -8624,18 +9683,18 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function refreshLoopUi() {
     document.body.dataset.loopMode = loop.mode || "";
-    const el2 = activeMedia();
+    const el3 = activeMedia();
     const timed = !!song && hasTimeline(song.lyricTimes);
     const set = (id, active, disabled) => {
-      const b = $(id);
+      const b = $2(id);
       if (!b) return;
       b.classList.toggle("active", active);
       b.disabled = disabled;
     };
-    set("#loopLineBtn", loop.mode === "line", !el2 || !timed || tap.on);
-    set("#loopAbBtn", loop.mode === "ab", !el2 || !timed || tap.on);
-    set("#loopSongBtn", loop.mode === "song", !el2 || tap.on);
-    const hint2 = $("#loopHint");
+    set("#loopLineBtn", loop.mode === "line", !el3 || !timed || tap.on);
+    set("#loopAbBtn", loop.mode === "ab", !el3 || !timed || tap.on);
+    set("#loopSongBtn", loop.mode === "song", !el3 || tap.on);
+    const hint2 = $2("#loopHint");
     if (!hint2) return;
     if (loop.picking === "a") hint2.textContent = loop.mode === "line" ? "\u9EDE\u4E00\u53E5\u4F86\u91CD\u8907" : "\u9EDE\u4E00\u53E5\u7576\u8D77\u9EDE";
     else if (loop.picking === "b") hint2.textContent = "\u518D\u9EDE\u4E00\u53E5\u7576\u7D42\u9EDE\uFF08\u9EDE\u540C\u4E00\u53E5\uFF1D\u53EA\u91CD\u8907\u9019\u4E00\u53E5\uFF09";
@@ -8659,25 +9718,25 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     loop.picking = null;
     applyLoopMarks();
     refreshLoopUi();
-    if (was && message) toast(message);
+    if (was && message) toast2(message);
   }
-  function jumpToLoopStart(el2, range) {
-    el2.currentTime = Math.max(0, range.start + offsetOf(el2) - (isNativeMedia(el2) ? 0 : IFRAME_PREROLL));
+  function jumpToLoopStart(el3, range) {
+    el3.currentTime = Math.max(0, range.start + offsetOf(el3) - (isNativeMedia(el3) ? 0 : IFRAME_PREROLL));
     loop.lastJump = Date.now();
   }
   function loopTick() {
     if (loop.mode !== "line" && loop.mode !== "ab" || loop.picking) return;
-    const el2 = activeMedia();
-    if (!el2) return;
+    const el3 = activeMedia();
+    if (!el3) return;
     const range = loopRangeNow();
     if (!range) {
       cancelLoop("\u9019\u5E7E\u53E5\u7684\u6642\u9593\u9EDE\u4E0D\u5920\uFF0C\u91CD\u8907\u64AD\u653E\u5DF2\u53D6\u6D88");
       return;
     }
-    if (el2.paused || Date.now() - loop.lastJump < 500) return;
-    const base = el2.currentTime - offsetOf(el2);
-    const lead = isNativeMedia(el2) ? 0 : IFRAME_END_LEAD;
-    if (base >= range.end - lead || base < range.start - 1.5) jumpToLoopStart(el2, range);
+    if (el3.paused || Date.now() - loop.lastJump < 500) return;
+    const base = el3.currentTime - offsetOf(el3);
+    const lead = isNativeMedia(el3) ? 0 : IFRAME_END_LEAD;
+    if (base >= range.end - lead || base < range.start - 1.5) jumpToLoopStart(el3, range);
   }
   function startLoop(mode3, a, b) {
     stopLoopTimer();
@@ -8700,8 +9759,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function toggleLoopAB() {
     if (loop.mode === "ab") return cancelLoop();
-    const el2 = activeMedia();
-    if (!el2 || !song || !hasTimeline(song.lyricTimes)) return;
+    const el3 = activeMedia();
+    if (!el3 || !song || !hasTimeline(song.lyricTimes)) return;
     cancelLoop();
     loop.mode = "ab";
     loop.picking = "a";
@@ -8718,7 +9777,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function pickLoopLine(i) {
     const times = ensureTimes();
     if (isBlank(song.lyrics[i]) || times[i] === null || times[i] === void 0) {
-      toast("\u9019\u4E00\u53E5\u9084\u6C92\u6709\u6642\u9593\u9EDE\uFF0C\u8ACB\u9EDE\u6709\u6642\u9593\u6A19\u7C64\u7684\u53E5\u5B50");
+      toast2("\u9019\u4E00\u53E5\u9084\u6C92\u6709\u6642\u9593\u9EDE\uFF0C\u8ACB\u9EDE\u6709\u6642\u9593\u6A19\u7C64\u7684\u53E5\u5B50");
       return;
     }
     if (loop.picking === "a" && loop.mode === "line") {
@@ -8744,28 +9803,28 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     loop.b = i;
     loop.picking = null;
     const range = loopRangeNow();
-    const el2 = activeMedia();
-    if (!range || !el2) {
+    const el3 = activeMedia();
+    if (!range || !el3) {
       cancelLoop("\u9019\u5E7E\u53E5\u7684\u6642\u9593\u9EDE\u4E0D\u5920\uFF0C\u91CD\u8907\u64AD\u653E\u5DF2\u53D6\u6D88");
       return;
     }
     startLoop("ab", Math.min(loop.a, i), Math.max(loop.a, i));
-    jumpToLoopStart(el2, range);
+    jumpToLoopStart(el3, range);
   }
-  function restartWhole(el2) {
+  function restartWhole(el3) {
     try {
-      if (!isNativeMedia(el2)) el2.ended = false;
-      el2.currentTime = 0;
-      if (typeof el2.play === "function") {
-        const r = el2.play();
+      if (!isNativeMedia(el3)) el3.ended = false;
+      el3.currentTime = 0;
+      if (typeof el3.play === "function") {
+        const r = el3.play();
         if (r && typeof r.catch === "function") r.catch(() => {
         });
       }
     } catch {
     }
   }
-  function bindLyricSync(deps5) {
-    handlers = { ...handlers, ...deps5 };
+  function bindLyricSync(deps6) {
+    handlers = { ...handlers, ...deps6 };
     followOn = handlers.getFollow();
     document.addEventListener("lyricsrendered", () => {
       if (!song) return;
@@ -8783,10 +9842,10 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     document.addEventListener("ended", (e) => {
       if (loop.mode === "song" && e.target instanceof HTMLMediaElement) restartWhole(e.target);
     }, true);
-    $("#loopLineBtn")?.addEventListener("click", toggleLoopLine);
-    $("#loopAbBtn")?.addEventListener("click", toggleLoopAB);
-    $("#loopSongBtn")?.addEventListener("click", toggleLoopSong);
-    $("#lyricsArea")?.addEventListener("click", (e) => {
+    $2("#loopLineBtn")?.addEventListener("click", toggleLoopLine);
+    $2("#loopAbBtn")?.addEventListener("click", toggleLoopAB);
+    $2("#loopSongBtn")?.addEventListener("click", toggleLoopSong);
+    $2("#lyricsArea")?.addEventListener("click", (e) => {
       if (!loop.picking || !song) return;
       const line = e.target.closest && e.target.closest(".lyric-line");
       if (!line) return;
@@ -8817,7 +9876,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         }
       }, true);
     }
-    const area = $("#lyricsArea");
+    const area = $2("#lyricsArea");
     const pauseFollow = () => {
       userScrollUntil = Date.now() + FOLLOW_PAUSE_MS;
       setTimeout(updateChip, 120);
@@ -8828,7 +9887,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         pauseFollow();
       }, { passive: true });
     }
-    $("#lyricsFollowChip")?.addEventListener("click", () => {
+    $2("#lyricsFollowChip")?.addEventListener("click", () => {
       userScrollUntil = 0;
       if (currentIdx >= 0) scrollToLine(currentIdx);
       updateChip();
@@ -8846,11 +9905,11 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         refreshPanel();
       } else seekToLine(i);
     });
-    $("#syncPanelBtn")?.addEventListener("click", () => {
-      $("#syncPanel")?.classList.toggle("hidden");
+    $2("#syncPanelBtn")?.addEventListener("click", () => {
+      $2("#syncPanel")?.classList.toggle("hidden");
       refreshPanel();
     });
-    $("#syncFollowBtn")?.addEventListener("click", () => {
+    $2("#syncFollowBtn")?.addEventListener("click", () => {
       followOn = !followOn;
       handlers.setFollow(followOn);
       userScrollUntil = 0;
@@ -8860,20 +9919,20 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     document.querySelectorAll("#syncPanel [data-offset-step]").forEach((b) => {
       b.addEventListener("click", () => setOffset(offsetOf(activeMedia()) + Number(b.dataset.offsetStep)));
     });
-    $("#syncOffsetReset")?.addEventListener("click", () => setOffset(0));
-    $("#syncOffsetInput")?.addEventListener("change", (e) => setOffset(e.target.value));
-    $("#syncTapBtn")?.addEventListener("click", enterTap);
-    $("#syncStampBtn")?.addEventListener("click", () => {
+    $2("#syncOffsetReset")?.addEventListener("click", () => setOffset(0));
+    $2("#syncOffsetInput")?.addEventListener("change", (e) => setOffset(e.target.value));
+    $2("#syncTapBtn")?.addEventListener("click", enterTap);
+    $2("#syncStampBtn")?.addEventListener("click", () => {
       stamp();
       document.activeElement?.blur?.();
     });
-    $("#syncPrevBtn")?.addEventListener("click", prevLine);
-    $("#syncDoneBtn")?.addEventListener("click", () => exitTap());
-    $("#syncLrcBtn")?.addEventListener("click", () => handlers.onImportLrc());
-    $("#syncUndoBtn")?.addEventListener("click", () => handlers.onUndoTiming());
-    $("#syncClearBtn")?.addEventListener("click", () => {
+    $2("#syncPrevBtn")?.addEventListener("click", prevLine);
+    $2("#syncDoneBtn")?.addEventListener("click", () => exitTap());
+    $2("#syncLrcBtn")?.addEventListener("click", () => handlers.onImportLrc());
+    $2("#syncUndoBtn")?.addEventListener("click", () => handlers.onUndoTiming());
+    $2("#syncClearBtn")?.addEventListener("click", () => {
       if (!song || !hasTimeline(song.lyricTimes)) {
-        toast("\u9019\u9996\u6B4C\u9084\u6C92\u6709\u6642\u9593\u8EF8");
+        toast2("\u9019\u9996\u6B4C\u9084\u6C92\u6709\u6642\u9593\u8EF8");
         return;
       }
       if (!window.confirm("\u8981\u6E05\u9664\u9019\u9996\u6B4C\u7684\u6574\u4EFD\u6642\u9593\u8EF8\u55CE\uFF1F\uFF08\u5404\u4F86\u6E90\u7684\u504F\u79FB\u6703\u4FDD\u7559\uFF09")) return;
@@ -8960,7 +10019,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const fetchBtn = document.querySelector("#lrcFetchBtn");
     const fetchMsg = document.querySelector("#lrcFetchMsg");
     const applyBtn = document.querySelector("#lrcApplyBtn");
-    const cancelBtn = document.querySelector("#lrcCancelBtn");
+    const cancelBtn2 = document.querySelector("#lrcCancelBtn");
     input.value = "";
     force.checked = false;
     document.querySelector("#lrcModeFill").checked = true;
@@ -9011,7 +10070,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         fetchBtn.onclick = null;
         fileInput.onchange = null;
         applyBtn.onclick = null;
-        cancelBtn.onclick = null;
+        cancelBtn2.onclick = null;
       };
       const close = (result) => {
         cleanup();
@@ -9042,7 +10101,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
           fetchBtn.disabled = false;
         }
       };
-      cancelBtn.onclick = () => close(null);
+      cancelBtn2.onclick = () => close(null);
       applyBtn.onclick = () => {
         if (!current) return;
         const imported = timesFromPairs((lyrics || []).length, current.pairs, current.entries);
@@ -9098,8 +10157,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var known = /* @__PURE__ */ new Map();
   var failed = /* @__PURE__ */ new Set();
   var inFlight = /* @__PURE__ */ new Set();
-  var queue = [];
-  var deps = null;
+  var queue2 = [];
+  var deps2 = null;
   var onUpdate = () => {
   };
   var saveTimer = null;
@@ -9107,7 +10166,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return typeof sec === "number" && Number.isFinite(sec) && sec > 0;
   }
   function bindAudioDuration(d) {
-    deps = d;
+    deps2 = d;
     onUpdate = typeof d.onChange === "function" ? d.onChange : () => {
     };
     if (typeof document !== "undefined") {
@@ -9132,7 +10191,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return known.has(source) || failed.has(source);
   }
   function hasPending() {
-    return inFlight.size > 0 || queue.length > 0;
+    return inFlight.size > 0 || queue2.length > 0;
   }
   function rememberDuration(source, seconds) {
     if (!source || !usable(seconds)) return;
@@ -9170,15 +10229,15 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function requestDurations(sources) {
     let added = false;
     for (const source of sources) {
-      if (!source || isSettled(source) || inFlight.has(source) || queue.includes(source)) continue;
-      queue.push(source);
+      if (!source || isSettled(source) || inFlight.has(source) || queue2.includes(source)) continue;
+      queue2.push(source);
       added = true;
     }
     if (added) pump();
   }
   function pump() {
-    while (inFlight.size < MAX_CONCURRENT && queue.length > 0) {
-      const source = queue.shift();
+    while (inFlight.size < MAX_CONCURRENT && queue2.length > 0) {
+      const source = queue2.shift();
       inFlight.add(source);
       probe(source).then((seconds) => {
         inFlight.delete(source);
@@ -9240,24 +10299,24 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function scheduleSave() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-      if (!deps || typeof deps.save !== "function") return;
+      if (!deps2 || typeof deps2.save !== "function") return;
       const entries = [...known.entries()];
       const kept = entries.slice(Math.max(0, entries.length - MAX_STORED));
       try {
-        deps.save(JSON.stringify(Object.fromEntries(kept)));
+        deps2.save(JSON.stringify(Object.fromEntries(kept)));
       } catch {
       }
     }, 500);
   }
 
   // js/components/practice-queue.js
-  var $2 = (selector) => document.querySelector(selector);
+  var $3 = (selector) => document.querySelector(selector);
   var TOGGLE_SELECTOR = "#pqModeGroup [data-toggle], #pqFootMode [data-toggle]";
   var PREV_RESTART_SEC = 3;
   var q = { active: false, plan: null, mode: normalizePracticeMode(null), failed: /* @__PURE__ */ new Set(), manage: false, transitioning: false, sig: "", blocked: false, waiting: false, awaitingPlay: false, loadTries: /* @__PURE__ */ new Map() };
-  var deps2 = null;
+  var deps3 = null;
   function librarySongs() {
-    return deps2 ? deps2.getLibrarySongs() : [];
+    return deps3 ? deps3.getLibrarySongs() : [];
   }
   function queueSongs() {
     return getPracticeSongs(librarySongs());
@@ -9274,34 +10333,38 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return { queueIds: queueIds(), isUsable, mode: q.mode };
   }
   function audioEl() {
-    return $2("#localAudioPlayer");
+    return $3("#localAudioPlayer");
   }
   function hint(text) {
-    const el2 = $2("#lastAudioNameHint");
-    if (el2) el2.textContent = text;
+    const el3 = $3("#lastAudioNameHint");
+    if (el3) el3.textContent = text;
   }
   function applyPracticeView(on) {
-    $2("#songFilters")?.classList.toggle("hidden", on);
-    $2("#practiceQueueBar")?.classList.toggle("hidden", !on);
+    $3("#songFilters")?.classList.toggle("hidden", on);
+    $3("#practiceQueueBar")?.classList.toggle("hidden", !on);
     document.body.classList.toggle("practice-view", on);
     updateTimeBar();
+    announceRendered();
+  }
+  function announceRendered() {
+    document.dispatchEvent(new CustomEvent("practicequeuerendered"));
   }
   function renderState() {
     const items = queueSongs();
     const ids = items.map((s) => s.id);
     const playable = ids.filter(isUsable).length;
-    const play = $2("#pqPlayBtn");
+    const play = $3("#pqPlayBtn");
     if (play) {
       play.textContent = q.active ? "\u25A0 \u7D50\u675F\u9023\u64AD" : "\u25B6 \u5168\u90E8\u64AD\u653E";
       play.disabled = !q.active && playable === 0;
       play.title = !q.active && playable === 0 ? "\u7DF4\u7FD2\u6B4C\u55AE\u88E1\u6C92\u6709\u53EF\u4EE5\u64AD\u653E\u7684\u97F3\u6A94" : "";
     }
-    const count = $2("#pqCount");
+    const count = $3("#pqCount");
     if (count) {
       const skipped = items.filter((song2) => !hasPlayableAudio(song2)).length;
       count.textContent = skipped > 0 ? `${ids.length} \u9996\uFF08${skipped} \u7121\u97F3\u6A94\uFF09` : `${ids.length} \u9996`;
     }
-    const manageBtn = $2("#pqManageBtn");
+    const manageBtn = $3("#pqManageBtn");
     if (manageBtn) {
       manageBtn.textContent = q.manage ? "\u5B8C\u6210" : "\u6574\u7406\u9806\u5E8F";
       manageBtn.classList.toggle("hidden", ids.length === 0);
@@ -9311,34 +10374,35 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       btn.classList.toggle("active", on);
       btn.setAttribute("aria-pressed", on ? "true" : "false");
     });
-    const player = $2("#mediaPlayer");
+    const player = $3("#mediaPlayer");
     if (player) player.classList.toggle("pq-active", q.active);
     if (q.active) {
       const cur = currentOfPlan(q.plan);
       const pos = ids.indexOf(cur) + 1;
-      const label = $2("#pqNowLabel");
+      const label = $3("#pqNowLabel");
       if (label) {
         const prog = planProgress(q.plan, isUsable);
         label.textContent = q.mode.shuffle && prog.total > 0 ? `\u96A8\u6A5F ${prog.position}/${prog.total}` : `\u7DF4\u7FD2\u6B4C\u55AE ${pos > 0 ? pos : "-"}/${ids.length}`;
       }
-      const next = $2("#pqNextBtn");
+      const next = $3("#pqNextBtn");
       if (next) next.disabled = !hasNextInPlan(q.plan, planCtx());
     }
     ensureDurations(items);
     updateTimeBar();
     renderResumeBar();
     publishQueueState();
+    announceRendered();
   }
   function renderResumeBar() {
-    const bar = $2("#pqResumeBar");
+    const bar = $3("#pqResumeBar");
     if (!bar) return;
-    const pending2 = deps2 && deps2.resume ? deps2.resume.getPending() : null;
+    const pending2 = deps3 && deps3.resume ? deps3.resume.getPending() : null;
     const song2 = pending2 && pending2.inQueue && !q.active ? queueSongs().find((s) => s.id === pending2.songId) : null;
     const show = !!song2 && hasPlayableAudio(song2);
     bar.classList.toggle("hidden", !show);
     if (!show) return;
     const sameSong = audioEl()?.dataset.songId === song2.id;
-    const text = $2("#pqResumeText");
+    const text = $3("#pqResumeText");
     if (text) {
       text.textContent = "";
       text.append(sameSong ? "\u4E0A\u6B21\u64AD\u5230 " : `\u4E0A\u6B21\u64AD\u5230\u300C${song2.title || "\uFF08\u672A\u547D\u540D\uFF09"}\u300D `);
@@ -9348,11 +10412,11 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
   function continueFromResume() {
-    const pending2 = deps2 && deps2.resume ? deps2.resume.getPending() : null;
+    const pending2 = deps3 && deps3.resume ? deps3.resume.getPending() : null;
     if (!pending2) return;
     const song2 = queueSongs().find((s) => s.id === pending2.songId);
     if (!song2 || !hasPlayableAudio(song2)) return;
-    deps2.resume.seekTo(pending2);
+    deps3.resume.seekTo(pending2);
     startPlayback(song2, { keepResume: true });
   }
   var publishedQueueState = "";
@@ -9366,26 +10430,26 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   var sourceOf = (song2) => (song2.audioList || []).map((v) => String(v ?? "").trim()).find(Boolean) || "";
   function ensureDurations(items) {
-    if (!deps2 || !deps2.durations) return;
+    if (!deps3 || !deps3.durations) return;
     if (!q.active && !document.body.classList.contains("practice-view")) return;
-    deps2.durations.request(items.filter(hasPlayableAudio).map(sourceOf));
+    deps3.durations.request(items.filter(hasPlayableAudio).map(sourceOf));
   }
-  function setText(el2, text) {
-    if (el2 && el2.textContent !== text) el2.textContent = text;
+  function setText(el3, text) {
+    if (el3 && el3.textContent !== text) el3.textContent = text;
   }
-  function setClockText(el2, prefix, seconds) {
-    if (!el2) return;
+  function setClockText(el3, prefix, seconds) {
+    if (!el3) return;
     const html = `${prefix}${prefix.endsWith("\u30FB") ? "" : " "}<b>${formatClock(seconds)}</b>`;
-    if (el2.innerHTML !== html) el2.innerHTML = html;
+    if (el3.innerHTML !== html) el3.innerHTML = html;
   }
   function updateTimeBar() {
-    const bar = $2("#pqTimeBar");
+    const bar = $3("#pqTimeBar");
     if (!bar) return;
     const inView = document.body.classList.contains("practice-view");
     const songs = queueSongs();
     const audio = audioEl();
     const byId = new Map(songs.map((s) => [s.id, s]));
-    const durations = deps2 && deps2.durations;
+    const durations = deps3 && deps3.durations;
     const durationOf = (id) => {
       if (q.active && audio && id === currentOfPlan(q.plan) && audio.dataset.songId === id && isKnownDuration(audio.duration)) {
         return audio.duration;
@@ -9403,8 +10467,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const show = inView && sum.count > 0;
     bar.classList.toggle("hidden", !show);
     if (!show) return;
-    const totalEl = $2("#pqTimeTotal");
-    const rightEl = $2("#pqTimeRight");
+    const totalEl = $3("#pqTimeTotal");
+    const rightEl = $3("#pqTimeRight");
     if (sum.total > 0) setClockText(totalEl, sum.unknown > 0 ? "\u5171\u7D04" : "\u5171", sum.total);
     else setText(totalEl, durations && durations.hasPending() ? "\u8B80\u53D6\u9577\u5EA6\u4E2D\u2026" : "\u9577\u5EA6\u4E0D\u660E");
     const repeating = !!document.body.dataset.loopMode;
@@ -9422,7 +10486,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     } else {
       setText(rightEl, `${sum.count} \u9996`);
     }
-    const track = $2("#pqProgress");
+    const track = $3("#pqProgress");
     const pct = fill === null ? 0 : Math.round(fill * 1e3) / 10;
     if (track) {
       const bar2 = track.firstElementChild;
@@ -9435,7 +10499,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     updateTimeBar();
   }
   function renderPracticeList(allSongs, selectedId, handlers2 = {}) {
-    const container = $2("#songList");
+    const container = $3("#songList");
     if (!container) return;
     container.innerHTML = "";
     const items = getPracticeSongs(allSongs);
@@ -9537,7 +10601,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var drag = null;
   function startRowDrag(e, item, song2, from, handlers2) {
     if (drag || e.pointerType === "mouse" && e.button !== 0) return;
-    const container = $2("#songList");
+    const container = $3("#songList");
     const rows = Array.from(container.querySelectorAll(".pq-item"));
     if (rows.length < 2 || rows[from] !== item) return;
     e.preventDefault();
@@ -9706,12 +10770,12 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     markBlocked();
   }
   function showTapBanner(on) {
-    document.querySelectorAll(".pq-tap-banner").forEach((el3) => el3.remove());
+    document.querySelectorAll(".pq-tap-banner").forEach((el4) => el4.remove());
     if (!on) return;
-    const el2 = document.createElement("div");
-    el2.className = "pq-tap-banner";
-    el2.textContent = "\u9023\u64AD\u5DF2\u5207\u63DB\u5230\u4E0B\u4E00\u9996\uFF0C\u4F46\u97F3\u6A94\u88AB\u64CB\u4F4F\u4E86\uFF1A\u9EDE\u4E00\u4E0B\u756B\u9762\u4EFB\u4F55\u5730\u65B9\u7E7C\u7E8C\u64AD\u653E";
-    document.body.appendChild(el2);
+    const el3 = document.createElement("div");
+    el3.className = "pq-tap-banner";
+    el3.textContent = "\u9023\u64AD\u5DF2\u5207\u63DB\u5230\u4E0B\u4E00\u9996\uFF0C\u4F46\u97F3\u6A94\u88AB\u64CB\u4F4F\u4E86\uFF1A\u9EDE\u4E00\u4E0B\u756B\u9762\u4EFB\u4F55\u5730\u65B9\u7E7C\u7E8C\u64AD\u653E";
+    document.body.appendChild(el3);
   }
   function markBlocked() {
     if (!q.active || q.blocked) return;
@@ -9751,7 +10815,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     q.transitioning = true;
     let ok = false;
     try {
-      ok = deps2.selectSong(song2, { auto });
+      ok = deps3.selectSong(song2, { auto });
     } finally {
       q.transitioning = false;
     }
@@ -9767,11 +10831,11 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return true;
   }
   function refreshListIfPracticeView() {
-    if (document.body.classList.contains("practice-view") && deps2 && deps2.refreshList) deps2.refreshList();
+    if (document.body.classList.contains("practice-view") && deps3 && deps3.refreshList) deps3.refreshList();
   }
   function startPlayback(startSong, { keepResume = false } = {}) {
-    if (!deps2) return;
-    if (!keepResume && deps2.resume) deps2.resume.discard();
+    if (!deps3) return;
+    if (!keepResume && deps3.resume) deps3.resume.discard();
     const wasActive = q.active;
     const prevPlan = q.plan;
     if (!wasActive) {
@@ -9880,7 +10944,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function setMode(mode3) {
     const before = q.mode;
     q.mode = normalizePracticeMode(mode3);
-    if (deps2 && deps2.setMode) deps2.setMode(serializePracticeMode(q.mode));
+    if (deps3 && deps3.setMode) deps3.setMode(serializePracticeMode(q.mode));
     if (q.active && before.shuffle !== q.mode.shuffle) {
       const plan = createPlan({ queueIds: queueIds(), isUsable, startId: currentOfPlan(q.plan), mode: q.mode });
       if (plan) q.plan = plan;
@@ -9921,23 +10985,23 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     if (q.active) endQueue({ pause: true });
   }
   function bindPracticeQueue(d) {
-    deps2 = d;
+    deps3 = d;
     q.mode = normalizePracticeMode(d.getMode());
-    $2("#pqPlayBtn")?.addEventListener("click", () => {
+    $3("#pqPlayBtn")?.addEventListener("click", () => {
       if (q.active) endQueue({ pause: true });
       else startPlayback(null);
     });
     document.querySelectorAll(TOGGLE_SELECTOR).forEach((btn) => {
       btn.addEventListener("click", () => toggleMode(btn.dataset.toggle));
     });
-    $2("#pqManageBtn")?.addEventListener("click", () => {
+    $3("#pqManageBtn")?.addEventListener("click", () => {
       q.manage = !q.manage;
       renderState();
       d.refreshList();
     });
-    $2("#pqPrevBtn")?.addEventListener("click", playPrevious);
-    $2("#pqNextBtn")?.addEventListener("click", playNext);
-    $2("#pqResumeBtn")?.addEventListener("click", continueFromResume);
+    $3("#pqPrevBtn")?.addEventListener("click", playPrevious);
+    $3("#pqNextBtn")?.addEventListener("click", playNext);
+    $3("#pqResumeBtn")?.addEventListener("click", continueFromResume);
     document.addEventListener("resumepending", renderResumeBar);
     document.addEventListener("mediasessionnav", (e) => {
       if (!e.detail) return;
@@ -10021,14 +11085,14 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
 
   // js/components/media-session.js
-  var $3 = (selector) => document.querySelector(selector);
+  var $4 = (selector) => document.querySelector(selector);
   var supported = typeof navigator !== "undefined" && "mediaSession" in navigator;
   var POSITION_THROTTLE_MS = 1e3;
   var queueState = { active: false, hasNext: false };
   var metadataKey = "";
   var lastPositionAt = 0;
   function audioEl2() {
-    return $3("#localAudioPlayer");
+    return $4("#localAudioPlayer");
   }
   function setHandler(action, handler) {
     try {
@@ -10126,247 +11190,10 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     document.addEventListener("timeupdate", onAudio(() => updatePositionState()), true);
   }
 
-  // js/engine/mix-versions.js
-  var MIX_EXTS = ["mp3", "flac", "m4a", "wav", "aac"];
-  var MAX_MIX_SECONDS = 600;
-  var LENGTH_TOLERANCE = 1;
-  var MIX_MODES = ["orig", "alt"];
-  var MIX_MODE_DEFAULT = "orig";
-  var TIER_LABELS = ["\u4F34\u594F", "instrument", "\u5C0E\u97F3"];
-  var TIER_SUFFIXES = [["\u4F34\u594F"], ["instrumental", "instrument", "inst"], ["\u5C0E\u97F3"]];
-  function baseOf(path) {
-    const s = String(path ?? "").trim();
-    const noQuery = /^https?:/i.test(s) ? s.replace(/[?#].*$/, "") : s;
-    return noQuery.split(/[\\/]/).filter(Boolean).pop() || "";
-  }
-  function classifyName(path) {
-    let name = baseOf(path);
-    try {
-      name = decodeURIComponent(name);
-    } catch {
-    }
-    name = name.normalize("NFKC");
-    if (/伴奏/.test(name)) return 0;
-    if (/(^|[^a-z])(instrumental|instrument|inst|off[\s_-]?vocal)([^a-z]|$)/i.test(name)) return 1;
-    if (/導音|导音/.test(name)) return 2;
-    return null;
-  }
-  function originalBase(audioValue) {
-    const value = String(audioValue ?? "").trim();
-    if (!value) return null;
-    const hasScheme = /^[A-Za-z][A-Za-z0-9+.-]*:/.test(value);
-    if (hasScheme && !/^https?:/i.test(value)) return null;
-    const isUrl = /^https?:/i.test(value);
-    const m = (isUrl ? /^([^?#]*?)\.([A-Za-z0-9]{1,5})([?#].*)?$/ : /^(.*)\.([A-Za-z0-9]{1,5})()$/).exec(value);
-    if (!m || m[1] === "" || m[1].endsWith("/")) return null;
-    if (classifyName(value) !== null) return null;
-    return { base: m[1], suffix: m[3] || "", ext: m[2].toLowerCase() };
-  }
-  function sameNameCandidates(audioValue) {
-    const b = originalBase(audioValue);
-    if (!b) return [];
-    const exts = [b.ext, ...MIX_EXTS].filter((e, i, a) => MIX_EXTS.includes(e) && a.indexOf(e) === i);
-    const out = [];
-    TIER_SUFFIXES.forEach((names, tier) => {
-      names.forEach((name) => exts.forEach((ext) => {
-        out.push({ value: `${b.base}.${name}.${ext}${b.suffix}`, tier, source: "name" });
-      }));
-    });
-    return out;
-  }
-  var nfc2 = (s) => String(s ?? "").trim().normalize("NFC");
-  function listCandidates(audioList, activeValue) {
-    const active = nfc2(activeValue);
-    const seen = /* @__PURE__ */ new Set();
-    const out = [];
-    for (const raw of audioList || []) {
-      const v = String(raw ?? "").trim();
-      if (!v || nfc2(v) === active || seen.has(nfc2(v))) continue;
-      seen.add(nfc2(v));
-      out.push({ value: v, tier: classifyName(v), source: "list" });
-    }
-    return out;
-  }
-  function rankCandidates(existingSameName, listed) {
-    const seen = /* @__PURE__ */ new Set();
-    const all = [];
-    [...existingSameName || [], ...listed || []].forEach((c, order) => {
-      const k = nfc2(c.value);
-      if (seen.has(k)) return;
-      seen.add(k);
-      all.push({ ...c, order });
-    });
-    const tierRank = (t) => t === null || t === void 0 ? 9 : t;
-    const srcRank = (c) => c.source === "name" ? 0 : 1;
-    return all.sort((a, b) => tierRank(a.tier) - tierRank(b.tier) || srcRank(a) - srcRank(b) || a.order - b.order);
-  }
-  function pickDefault(ranked) {
-    return (ranked || []).find((c) => c.tier !== null && c.tier !== void 0) || null;
-  }
-  function normalizeMixPicks(raw) {
-    const out = {};
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-      for (const [k, v] of Object.entries(raw)) {
-        if (typeof v === "string" && v.trim()) out[k] = v;
-      }
-    }
-    const keys = Object.keys(out);
-    if (keys.length > 200) keys.slice(0, keys.length - 200).forEach((k) => delete out[k]);
-    return out;
-  }
-  function lengthsMatch(a, b, tolerance = LENGTH_TOLERANCE) {
-    return Number.isFinite(a) && Number.isFinite(b) && a > 0 && b > 0 && Math.abs(a - b) <= tolerance;
-  }
-  function normalizeMixMode(value) {
-    return MIX_MODES.includes(value) ? value : MIX_MODE_DEFAULT;
-  }
-  function mixGains(mode3, match = { orig: 1, alt: 1 }) {
-    return normalizeMixMode(mode3) === "alt" ? { orig: 0, alt: match.alt } : { orig: match.orig, alt: 0 };
-  }
-  var MAX_MATCH_DB = 6;
-  var MIN_MATCH_DB = 0.5;
-  function loudnessMatch(origMono, altMono, rate, altPeak = 1) {
-    const none = { orig: 1, alt: 1, db: 0 };
-    const block = Math.max(1, Math.round(rate * 0.5));
-    const n = Math.min(origMono.length, altMono.length);
-    const ratios = [];
-    for (let i = 0; i + block <= n; i += block) {
-      let so = 0, sa = 0;
-      for (let j = i; j < i + block; j++) {
-        so += origMono[j] * origMono[j];
-        sa += altMono[j] * altMono[j];
-      }
-      const ro = Math.sqrt(so / block), ra = Math.sqrt(sa / block);
-      if (ro > 3e-3 && ra > 3e-3) ratios.push(ro / ra);
-    }
-    if (ratios.length < 8) return none;
-    ratios.sort((a, b) => a - b);
-    const r = ratios[Math.floor(ratios.length * 0.05)];
-    const db = 20 * Math.log10(r);
-    if (Math.abs(db) < MIN_MATCH_DB || Math.abs(db) > MAX_MATCH_DB) return none;
-    const g = 10 ** (db / 20);
-    if (g <= 1) return { orig: 1, alt: g, db };
-    const alt = Math.min(g, 0.98 / Math.max(altPeak, 1e-6));
-    return { orig: alt / g, alt, db };
-  }
-  function peakOf(samples) {
-    let m = 0;
-    for (let i = 0; i < samples.length; i++) {
-      const x = Math.abs(samples[i]);
-      if (x > m) m = x;
-    }
-    return m;
-  }
-  function blockRms(samples, block) {
-    const n = Math.floor(samples.length / block);
-    const out = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      let s = 0;
-      for (let j = 0; j < block; j++) {
-        const x = samples[i * block + j];
-        s += x * x;
-      }
-      out[i] = Math.sqrt(s / block);
-    }
-    return out;
-  }
-  function estimateLag(a, b, maxLag) {
-    const n = Math.min(a.length, b.length);
-    let best = { lag: 0, corr: -1 };
-    for (let lag = -maxLag; lag <= maxLag; lag++) {
-      const lo = Math.max(0, -lag);
-      const hi = Math.min(n, n - lag);
-      const m = hi - lo;
-      if (m < 50) continue;
-      let sa = 0, sb = 0;
-      for (let i = lo; i < hi; i++) {
-        sa += a[i];
-        sb += b[i + lag];
-      }
-      const ma = sa / m, mb = sb / m;
-      let num = 0, da = 0, db = 0;
-      for (let i = lo; i < hi; i++) {
-        const x = a[i] - ma, y = b[i + lag] - mb;
-        num += x * y;
-        da += x * x;
-        db += y * y;
-      }
-      const corr = da > 0 && db > 0 ? num / Math.sqrt(da * db) : 0;
-      if (corr > best.corr) best = { lag, corr };
-    }
-    return { lag: best.lag, corr: Math.max(0, best.corr) };
-  }
-  function estimateOffsetSeconds(origMono, altMono, rate, { windowSeconds = 30, maxLagSeconds = 0.3 } = {}) {
-    const block = Math.max(1, Math.round(rate / 1e3));
-    const binSeconds = block / rate;
-    const total = Math.min(origMono.length, altMono.length);
-    const start = Math.floor(Math.min(10 * rate, total * 0.2));
-    const end = Math.min(total, start + Math.floor(windowSeconds * rate));
-    if (end - start < rate * 2) return { offset: 0, corr: 0 };
-    const a = blockRms(origMono.subarray(start, end), block);
-    const b = blockRms(altMono.subarray(start, end), block);
-    const { lag, corr } = estimateLag(a, b, Math.round(maxLagSeconds / binSeconds));
-    const offset = lag * binSeconds;
-    if (corr < 0.6 || Math.abs(offset) < 4e-3) return { offset: 0, corr };
-    return { offset, corr };
-  }
-  function silentWav(seconds) {
-    const rate = 8e3;
-    const n = Math.max(1, Math.ceil(seconds * rate));
-    const bytes = new Uint8Array(44 + n);
-    const view = new DataView(bytes.buffer);
-    const tag = (offset, text) => {
-      for (let i = 0; i < text.length; i++) bytes[offset + i] = text.charCodeAt(i);
-    };
-    tag(0, "RIFF");
-    view.setUint32(4, 36 + n, true);
-    tag(8, "WAVE");
-    tag(12, "fmt ");
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, 1, true);
-    view.setUint32(24, rate, true);
-    view.setUint32(28, rate, true);
-    view.setUint16(32, 1, true);
-    view.setUint16(34, 8, true);
-    tag(36, "data");
-    view.setUint32(40, n, true);
-    bytes.fill(128, 44);
-    return bytes;
-  }
-  function assignMixFiles(names, { origHint = "", haveOrig = false, haveAlt = false } = {}) {
-    const list = (names || []).map((n) => String(n ?? ""));
-    const out = list.map(() => null);
-    const hint2 = nfc2(origHint.split(/[\\/]/).filter(Boolean).pop() || "");
-    const tiers = list.map((n) => classifyName(n));
-    let altIdx = -1;
-    if (!haveAlt) {
-      let best = 9;
-      tiers.forEach((t, i) => {
-        if (t !== null && t < best) {
-          best = t;
-          altIdx = i;
-        }
-      });
-    }
-    if (altIdx >= 0) out[altIdx] = "alt";
-    if (!haveOrig) {
-      const rest = list.map((_, i) => i).filter((i) => i !== altIdx && tiers[i] === null);
-      const byHint = rest.find((i) => hint2 && nfc2(list[i]) === hint2);
-      const pick = byHint !== void 0 ? byHint : rest.length === 1 ? rest[0] : -1;
-      if (pick >= 0) out[pick] = "orig";
-    }
-    if (!haveAlt && altIdx < 0) {
-      const rest = list.map((_, i) => i).filter((i) => out[i] === null && tiers[i] === null);
-      if ((haveOrig || out.includes("orig")) && rest.length === 1) out[rest[0]] = "alt";
-    }
-    return out;
-  }
-
   // js/components/mix-toggle.js
-  var $4 = (sel) => document.querySelector(sel);
-  var audioEl3 = () => $4("#localAudioPlayer");
-  var nfc3 = (s) => String(s ?? "").trim().normalize("NFC");
+  var $5 = (sel) => document.querySelector(sel);
+  var audioEl3 = () => $5("#localAudioPlayer");
+  var nfc4 = (s) => String(s ?? "").trim().normalize("NFC");
   var RAMP_SECONDS = 0.05;
   var DRIFT_CHECK_MS = 3e3;
   var DRIFT_LIMIT = 0.15;
@@ -10374,7 +11201,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var QUIET_AFTER_SHOW_MS = 3e3;
   var DRIFT_CONFIRMS = 2;
   var RESTART_SKIP_MS = 400;
-  var deps3 = {
+  var deps4 = {
     getMode: () => "",
     setMode: () => {
     },
@@ -10446,7 +11273,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var MIC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg>';
   var MIC_OFF = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 9.3V5a3 3 0 0 0-5.9-.8M9 9v2a3 3 0 0 0 5 2.2M5 11a7 7 0 0 0 11.5 5.3M19 11a7 7 0 0 1-.6 2.8M12 18v4M8 22h8M2 2l20 20"/></svg>';
   function setHint(text) {
-    const hint2 = $4("#lastAudioNameHint");
+    const hint2 = $5("#lastAudioNameHint");
     if (!hint2) return;
     if (text) {
       hint2.textContent = text;
@@ -10460,11 +11287,11 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return c ? c.tier === null || c.tier === void 0 ? "\u81EA\u9078" : TIER_LABELS[c.tier] : "\u9078\u64C7\u2026";
   }
   function renderUi() {
-    const group = $4("#mixGroup");
-    const btn = $4("#mixToggle");
-    const pick = $4("#mixPickBtn");
+    const group = $5("#mixGroup");
+    const btn = $5("#mixToggle");
+    const pick = $5("#mixPickBtn");
     if (!group || !btn || !pick) return;
-    const show = deps3.getVisible() && (S.ranked.length > 0 || S.offline) && !!S.key;
+    const show = deps4.getVisible() && (S.ranked.length > 0 || S.offline) && !!S.key;
     group.classList.toggle("hidden", !show);
     group.classList.toggle("inline-flex", show);
     if (!show) return;
@@ -10512,17 +11339,17 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return [];
   }
   async function serverExisting(cands) {
-    const result = await deps3.fetchAudioList({ refresh: false });
-    const have = new Set((result.files || []).map((f) => nfc3(f.path)));
-    return cands.filter((c) => have.has(nfc3(c.value))).map((c) => ({ ...c, url: toAudioSrc(c.value) }));
+    const result = await deps4.fetchAudioList({ refresh: false });
+    const have = new Set((result.files || []).map((f) => nfc4(f.path)));
+    return cands.filter((c) => have.has(nfc4(c.value))).map((c) => ({ ...c, url: toAudioSrc(c.value) }));
   }
   function picksKey() {
     return S.key;
   }
   function resolveChosen() {
-    const picks = normalizeMixPicks(deps3.getPicks());
+    const picks = normalizeMixPicks(deps4.getPicks());
     const wanted = picks[picksKey()];
-    const hit = wanted && S.ranked.find((c) => nfc3(c.value) === nfc3(wanted));
+    const hit = wanted && S.ranked.find((c) => nfc4(c.value) === nfc4(wanted));
     S.chosen = hit || pickDefault(S.ranked);
   }
   function urlOf(c) {
@@ -10534,12 +11361,12 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       renderUi();
       return;
     }
-    const song2 = deps3.getSong();
+    const song2 = deps4.getSong();
     const listed = listCandidates(song2 && song2.audioList, S.sourceKey);
     S.ranked = rankCandidates(S.existing, listed);
-    const before = S.chosen && nfc3(S.chosen.value);
+    const before = S.chosen && nfc4(S.chosen.value);
     resolveChosen();
-    if (before !== (S.chosen && nfc3(S.chosen.value))) onChosenChanged();
+    if (before !== (S.chosen && nfc4(S.chosen.value))) onChosenChanged();
     renderUi();
   }
   function stopSources() {
@@ -10626,11 +11453,11 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     reset();
     const audio = audioEl3();
     if (!audio || !audio.getAttribute("src")) return;
-    if (!deps3.getVisible()) return;
+    if (!deps4.getVisible()) return;
     const sourceKey = audio.dataset.sourceKey || "";
     if (!originalBase(sourceKey)) return;
     const token = S.token;
-    const key = `${audio.dataset.songId || ""}|${nfc3(sourceKey)}`;
+    const key = `${audio.dataset.songId || ""}|${nfc4(sourceKey)}`;
     const origUrl = audio.currentSrc || audio.getAttribute("src");
     if (useLocalFiles()) {
       const pair = offlinePicks.get(key);
@@ -10648,7 +11475,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     const same = sameNameCandidates(sourceKey);
     let existing = [];
     try {
-      existing = deps3.isServerMode() && deps3.fetchAudioList && !/^https?:/i.test(sourceKey) ? await serverExisting(same) : await headExisting(same);
+      existing = deps4.isServerMode() && deps4.fetchAudioList && !/^https?:/i.test(sourceKey) ? await serverExisting(same) : await headExisting(same);
     } catch {
       existing = [];
     }
@@ -10729,7 +11556,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function fail(token, message) {
     if (token !== S.token) return false;
     mode2 = "orig";
-    deps3.setMode("orig");
+    deps4.setMode("orig");
     setHint(message);
     S.ready = false;
     return false;
@@ -10748,7 +11575,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     buildGraph();
     audio.src = S.silentUrl;
     audio.classList.remove("hidden");
-    const hintEl2 = $4("#lastAudioNameHint");
+    const hintEl2 = $5("#lastAudioNameHint");
     if (hintEl2 && hintEl2.textContent.startsWith("\u627E\u4E0D\u5230")) hintEl2.textContent = "";
     audio.load();
     await waitMetadata(audio);
@@ -10876,7 +11703,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
     const next = mode2 === "alt" ? "orig" : "alt";
     mode2 = next;
-    deps3.setMode(next);
+    deps4.setMode(next);
     renderUi();
     if (next === "alt" && !S.ready) {
       const ok = await ensurePrepared();
@@ -10892,7 +11719,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   async function leaveMix() {
     mode2 = "orig";
-    deps3.setMode("orig");
+    deps4.setMode("orig");
     if (S.mixing) await restoreOriginal();
     await onSourceChanged();
     announce();
@@ -11035,7 +11862,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
           radio.type = "radio";
           radio.name = "mixPickRadio";
           radio.className = "mt-1";
-          radio.checked = !!S.chosen && nfc3(S.chosen.value) === nfc3(c.value);
+          radio.checked = !!S.chosen && nfc4(S.chosen.value) === nfc4(c.value);
           radio.addEventListener("change", () => choose(c));
           const box = document.createElement("span");
           box.className = "flex-1 min-w-0";
@@ -11067,19 +11894,19 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       }
     };
     const choose = (c) => {
-      const picks = normalizeMixPicks(deps3.getPicks());
+      const picks = normalizeMixPicks(deps4.getPicks());
       const def = pickDefault(S.ranked);
-      if (def && nfc3(def.value) === nfc3(c.value)) delete picks[picksKey()];
+      if (def && nfc4(def.value) === nfc4(c.value)) delete picks[picksKey()];
       else picks[picksKey()] = c.value;
-      deps3.setPicks(picks);
-      const before = S.chosen && nfc3(S.chosen.value);
+      deps4.setPicks(picks);
+      const before = S.chosen && nfc4(S.chosen.value);
       resolveChosen();
-      if (before !== (S.chosen && nfc3(S.chosen.value))) onChosenChanged();
+      if (before !== (S.chosen && nfc4(S.chosen.value))) onChosenChanged();
       renderUi();
     };
     const add = document.createElement("div");
     add.className = "mt-3 flex flex-wrap items-center gap-2";
-    const nasBtn = $4("#pickNasAudioBtn");
+    const nasBtn = $5("#pickNasAudioBtn");
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "text-xs px-3 py-1.5 border border-[color:var(--accent)] text-[color:var(--accent)]";
@@ -11088,7 +11915,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     addNote.className = "text-xs text-[color:var(--muted)]";
     addNote.textContent = nasBtn ? "\u6311\u5230\u7684\u6A94\u6703\u52A0\u9032\u9019\u9996\u6B4C\u7684\u97F3\u6A94\u6E05\u55AE\uFF0C\u518D\u56DE\u5230\u9019\u88E1\u9078\u3002" : "\u5230\u5DE6\u5074\u97F3\u6A94\u5340\u7528\u300C\uFF0B \u65B0\u589E\u6B04\u4F4D\u300D\u52A0\u5165\u6A94\u540D\uFF08\u8DDF\u7DB2\u9801\u653E\u540C\u4E00\u500B\u8CC7\u6599\u593E\uFF09\uFF0C\u518D\u56DE\u5230\u9019\u88E1\u9078\u3002";
     addBtn.addEventListener("click", () => {
-      const target = nasBtn || $4("#addAudioFieldBtn");
+      const target = nasBtn || $5("#addAudioFieldBtn");
       if (!target || target.disabled) {
         addNote.style.color = "var(--seal)";
         addNote.textContent = "\u8981\u5148\u6309\u5DE6\u5074\u7684\u300C\u7DE8\u8F2F\u300D\uFF0C\u97F3\u6A94\u5340\u624D\u80FD\u52A0\u6A94\u6848\u3002";
@@ -11106,12 +11933,12 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     auto.className = "text-xs text-[color:var(--muted)] underline";
     auto.textContent = "\u6062\u5FA9\u81EA\u52D5\u9078\u64C7";
     auto.addEventListener("click", () => {
-      const picks = normalizeMixPicks(deps3.getPicks());
+      const picks = normalizeMixPicks(deps4.getPicks());
       delete picks[picksKey()];
-      deps3.setPicks(picks);
-      const before = S.chosen && nfc3(S.chosen.value);
+      deps4.setPicks(picks);
+      const before = S.chosen && nfc4(S.chosen.value);
       resolveChosen();
-      if (before !== (S.chosen && nfc3(S.chosen.value))) onChosenChanged();
+      if (before !== (S.chosen && nfc4(S.chosen.value))) onChosenChanged();
       renderUi();
       render();
     });
@@ -11134,7 +11961,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       const f = findFile(c.value);
       if (f) return { file: f, tier: c.tier };
     }
-    const song2 = deps3.getSong();
+    const song2 = deps4.getSong();
     const listed = listCandidates(song2 && song2.audioList, sourceKey).filter((c) => c.tier !== null && c.tier !== void 0);
     listed.sort((a, b) => a.tier - b.tier);
     for (const c of listed) {
@@ -11398,7 +12225,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       rememberFile(pair.altFile);
       close();
       mode2 = "alt";
-      deps3.setMode("alt");
+      deps4.setMode("alt");
       if (S.mixing) await restoreOriginal();
       await onSourceChanged();
       announce();
@@ -11411,20 +12238,20 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function syncVisibleGroup() {
     document.querySelectorAll("#mixVisibleGroup [data-mix-visible]").forEach((b) => {
-      b.classList.toggle("active", b.dataset.mixVisible === "true" === deps3.getVisible());
+      b.classList.toggle("active", b.dataset.mixVisible === "true" === deps4.getVisible());
     });
   }
   function syncMixHint() {
-    $4("#mixHint")?.classList.toggle("hidden", !deps3.getVisible());
+    $5("#mixHint")?.classList.toggle("hidden", !deps4.getVisible());
   }
   function bindMixToggle(options = {}) {
-    deps3 = { ...deps3, ...options };
-    mode2 = normalizeMixMode(deps3.getMode());
+    deps4 = { ...deps4, ...options };
+    mode2 = normalizeMixMode(deps4.getMode());
     renderUi();
     ["loadstart", "emptied", "play", "pause", "ended", "seeking", "seeked"].forEach((t) => document.addEventListener(t, onMediaEvent, true));
     ["pointerdown", "touchend", "keydown"].forEach((t) => document.addEventListener(t, unlockContext, true));
-    $4("#mixToggle")?.addEventListener("click", toggle);
-    $4("#mixPickBtn")?.addEventListener("click", openPicker);
+    $5("#mixToggle")?.addEventListener("click", toggle);
+    $5("#mixPickBtn")?.addEventListener("click", openPicker);
     document.addEventListener("localfilesloaded", () => {
       if (S.offline && !S.mixing) onSourceChanged();
     });
@@ -11433,14 +12260,14 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target;
       if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-      if ($4("#mixToggle")?.offsetParent === null) return;
+      if ($5("#mixToggle")?.offsetParent === null) return;
       e.preventDefault();
       toggle();
     });
-    const wrap = $4("#audioFieldsWrap");
+    const wrap = $5("#audioFieldsWrap");
     if (wrap) new MutationObserver(() => refreshRanked()).observe(wrap, { childList: true });
     document.querySelectorAll("#mixVisibleGroup [data-mix-visible]").forEach((b) => b.addEventListener("click", () => {
-      deps3.setVisible(b.dataset.mixVisible === "true");
+      deps4.setVisible(b.dataset.mixVisible === "true");
       syncVisibleGroup();
       syncMixHint();
       restoreOriginal().then(onSourceChanged);
@@ -11504,7 +12331,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   // js/components/resume-position.js
   var SAVE_INTERVAL_MS = 5e3;
   var HINT_PREFIX = "\u5DF2\u56DE\u5230\u4E0A\u6B21\u7684\u4F4D\u7F6E";
-  var deps4 = null;
+  var deps5 = null;
   var startupRecord = null;
   var armedSeek = null;
   var pending = null;
@@ -11529,16 +12356,16 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function write() {
     const audio = audioEl4();
-    if (!deps4 || !audio || !touched) return;
+    if (!deps5 || !audio || !touched) return;
     const { songId, sourceKey } = keyOf(audio);
     if (!songId || !sourceKey || `${songId}|${sourceKey}` !== playedKey) return;
     const seconds = audio.currentTime;
     if (!Number.isFinite(seconds)) return;
     if (Number.isFinite(audio.duration) && audio.duration > 0 && seconds >= audio.duration - 0.5) {
-      deps4.save(null);
+      deps5.save(null);
       return;
     }
-    deps4.save(serializeResume({ songId, sourceKey, seconds, inQueue: queueActive }));
+    deps5.save(serializeResume({ songId, sourceKey, seconds, inQueue: queueActive }));
     lastSavedAt = Date.now();
   }
   function applyRestore(audio, record) {
@@ -11579,8 +12406,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
   function reloadResume() {
-    if (!deps4) return;
-    const record = normalizeResume(deps4.load());
+    if (!deps5) return;
+    const record = normalizeResume(deps5.load());
     const audio = audioEl4();
     if (audio && !audio.paused && !audio.ended) return;
     if (!record || !canRestore(record, NaN)) {
@@ -11604,7 +12431,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     emitPending();
   }
   function bindResumePosition(d) {
-    deps4 = d;
+    deps5 = d;
     const record = normalizeResume(d.load());
     if (record && canRestore(record, NaN)) {
       startupRecord = record;
@@ -11651,7 +12478,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }), true);
     document.addEventListener("pause", onAudio(write), true);
     document.addEventListener("ended", onAudio(() => {
-      if (touched) deps4.save(null);
+      if (touched) deps5.save(null);
     }), true);
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") write();
@@ -12213,6 +13040,28 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     saveData();
     refreshView();
   }
+  function repairAudioPath(listKey, songId, index, oldValue, newValue) {
+    const list = state.lists[listKey];
+    const song2 = list && list.songs.find((s) => s.id === songId);
+    if (!song2) return { ok: false, reason: "no-song" };
+    const result = repairAudioEntry(song2, index, oldValue, newValue);
+    if (result.ok) {
+      saveData();
+      refreshView();
+    }
+    return result;
+  }
+  function goToSong(listKey, songId) {
+    const list = state.lists[listKey];
+    if (!list || !list.songs.some((s) => s.id === songId)) return false;
+    if (!confirmDiscardDraftIfNeeded()) return false;
+    state.activeListId = listKey;
+    if (listKey !== "library") state.practiceView = false;
+    list.selectedId = songId;
+    saveData();
+    refreshView();
+    return true;
+  }
   function getAudioFormSong() {
     if (!editDraft) return null;
     if (editDraft.isNew) return editDraft.song;
@@ -12222,9 +13071,9 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function handleBlockedInput(info) {
     const song2 = editDraft ? editDraft.song : getSelectedSong();
     recordBlockedInput({ ...info, songId: song2 ? song2.id : "", songTitle: song2 ? song2.title : "" });
-    const el2 = document.querySelector("#detailFormStatusText");
-    if (el2) {
-      el2.textContent = "\u26A0 \u5DF2\u64CB\u4E0B\u4E00\u6B21\u7570\u5E38\u7684\u8F38\u5165\uFF08\u53EF\u80FD\u662F\u700F\u89BD\u5668\u81EA\u52D5\u586B\u5165\uFF09\uFF0C\u6B04\u4F4D\u5DF2\u9084\u539F";
+    const el3 = document.querySelector("#detailFormStatusText");
+    if (el3) {
+      el3.textContent = "\u26A0 \u5DF2\u64CB\u4E0B\u4E00\u6B21\u7570\u5E38\u7684\u8F38\u5165\uFF08\u53EF\u80FD\u662F\u700F\u89BD\u5668\u81EA\u52D5\u586B\u5165\uFF09\uFF0C\u6B04\u4F4D\u5DF2\u9084\u539F";
       setTimeout(updateDetailFormStatusText, 6e3);
     }
   }
@@ -12376,6 +13225,13 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     saveData();
     refreshSongList();
     notifyPracticeQueueChanged();
+  }
+  function handleApplyPracticeSet(set) {
+    const result = applyPracticeSet(state.lists.library.songs, set);
+    saveData();
+    refreshSongList();
+    notifyPracticeQueueChanged();
+    return result;
   }
   function handleRemovePractice(song2) {
     removeFromPractice(state.lists.library.songs, song2);
@@ -13004,6 +13860,9 @@ ${err.message}`);
         fetchAudioList,
         addAudioPaths,
         getCurrentSong: getAudioFormSong,
+        getLists: () => state.lists,
+        repairAudioPath,
+        goToSong,
         getDiagnostics: () => ({ changes: getChangeLog(), blocked: getBlockedLog() }),
         isAudioLocked: isAudioSectionLocked
       });
@@ -13036,6 +13895,12 @@ ${err.message}`);
       setMode: setPracticeMode,
       durations: { get: getDuration, request: requestDurations, remember: rememberDuration, hasPending },
       resume: { getPending: getPendingResume, seekTo: seekToResume, discard: discardResume }
+    });
+    bindPracticeSets({
+      getLibrarySongs: () => state.lists.library.songs,
+      getSets: getPracticeSets,
+      saveSets: setPracticeSets,
+      applySet: handleApplyPracticeSet
     });
     bindMixToggle({
       getMode: getMixMode,
