@@ -1514,7 +1514,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 1.4.0</span>
+        <span class="tabular-nums">V 1.4.1</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -4292,6 +4292,76 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function countMissing(set, songs) {
     return resolvePracticeSet(set, songs).missing.length;
+  }
+  function membershipsBySong(sets2, songs) {
+    const map = /* @__PURE__ */ new Map();
+    for (const set of sets2 || []) {
+      resolvePracticeSet(set, songs).matched.forEach((song2, i) => {
+        if (!map.has(song2.id)) map.set(song2.id, []);
+        map.get(song2.id).push({ name: set.name, pos: i + 1 });
+      });
+    }
+    return map;
+  }
+  function setsFromMemberships(entries, now = Date.now(), rng = Math.random) {
+    const groups = /* @__PURE__ */ new Map();
+    let order = 0;
+    for (const { song: song2, memberships } of entries || []) {
+      for (const m of memberships || []) {
+        const name = str(m.name).trim().slice(0, MAX_SET_NAME_LENGTH);
+        if (!name) continue;
+        const key = nameKey(name);
+        if (!groups.has(key)) groups.set(key, { name, rows: [] });
+        const pos = Number.isFinite(m.pos) && m.pos > 0 ? m.pos : Infinity;
+        groups.get(key).rows.push({ pos, order: order++, song: song2 });
+      }
+    }
+    return [...groups.values()].map((g) => ({
+      id: makeSetId(now, rng),
+      name: g.name,
+      savedAt: now,
+      items: g.rows.sort((a, b) => a.pos === b.pos ? a.order - b.order : a.pos < b.pos ? -1 : 1).map((r) => ({ id: str(r.song.id), title: str(r.song.title), artist: str(r.song.artist) }))
+    }));
+  }
+  function uniqueImportedName(name, sets2) {
+    const tag = (n) => n === 1 ? "\uFF08\u532F\u5165\uFF09" : `\uFF08\u532F\u5165 ${n}\uFF09`;
+    for (let n = 1; ; n++) {
+      const suffix = tag(n);
+      const candidate = name.slice(0, MAX_SET_NAME_LENGTH - suffix.length) + suffix;
+      if (!sets2.some((s) => nameKey(s.name) === nameKey(candidate))) return candidate;
+    }
+  }
+  function mergeImportedSets(existing, imported, songs, { replace = false } = {}) {
+    const incoming = imported || [];
+    const base = (existing || []).slice();
+    const result = { sets: base, added: 0, skipped: 0, renamed: 0, overLimit: 0 };
+    if (incoming.length === 0) return result;
+    if (replace) {
+      result.sets = incoming.slice(0, MAX_PRACTICE_SETS);
+      result.added = result.sets.length;
+      result.overLimit = incoming.length - result.sets.length;
+      return result;
+    }
+    const idsOf = (set) => resolvePracticeSet(set, songs).matched.map((s) => s.id).join("\0");
+    for (const set of incoming) {
+      const same = result.sets.find((s) => nameKey(s.name) === nameKey(set.name));
+      if (same && idsOf(same) === idsOf(set)) {
+        result.skipped++;
+        continue;
+      }
+      if (result.sets.length >= MAX_PRACTICE_SETS) {
+        result.overLimit++;
+        continue;
+      }
+      if (same) {
+        result.sets.push({ ...set, name: uniqueImportedName(set.name, result.sets) });
+        result.renamed++;
+      } else {
+        result.sets.push(set);
+      }
+      result.added++;
+    }
+    return result;
   }
 
   // js/components/practice-sets.js
@@ -12537,7 +12607,12 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     "practiceOrder",
     // 【v0.9.0】標籤：`類別:內容`，多筆用 CSV_LIST_SEP 分隔（例如 `作品:鬼滅之刃|類型:動畫歌`）。
     // 舊版 CSV 沒有這一欄，照欄位名稱查找，找不到就是沒有標籤，不影響舊檔案匯入。
-    "tags"
+    "tags",
+    // 【v1.4.1】備用歌單：這首歌屬於哪些備用歌單、排第幾，`名稱@位置`，多筆用 CSV_LIST_SEP 分隔
+    // （名稱裡的 `%`、`|`、`@` 編碼成 %25、%7C、%40；格式見 io/csv-mapper.js practiceSetsToCsvField()）。
+    // 只有「我的歌庫」的歌有意義。舊版 CSV 沒有這一欄，照欄位名稱查找，找不到就是沒有，不影響舊檔案匯入；
+    // 新版 CSV 拿給舊版程式開，舊版不認得這個欄位名稱，直接忽略。
+    "practiceSets"
   ];
   var CSV_HEADER_ALIASES = {
     list: ["list", "\u6B4C\u55AE", "playlist"],
@@ -12553,7 +12628,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     lyricTimes: ["lyrictimes", "\u6642\u9593\u8EF8"],
     lyricOffsets: ["lyricoffsets", "\u504F\u79FB"],
     practiceOrder: ["practiceorder", "\u7DF4\u7FD2\u9806\u5E8F"],
-    tags: ["tags", "\u6A19\u7C64"]
+    tags: ["tags", "\u6A19\u7C64"],
+    practiceSets: ["practicesets", "\u5099\u7528\u6B4C\u55AE"]
   };
   var CSV_LIST_SEP = "|";
   function csvEscapeField(field) {
@@ -12636,7 +12712,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
 
   // js/io/csv-mapper.js
-  function songToCsvRow(song2, listName) {
+  function songToCsvRow(song2, listName, practiceSetsCell = "") {
     return [
       listName ?? "",
       song2.title ?? "",
@@ -12655,11 +12731,36 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       lyricOffsetsToCsvField(song2.lyricOffsets),
       // v0.7.0：練習歌單的順序鍵，不在練習歌單就留空
       typeof song2.practiceOrder === "number" && Number.isFinite(song2.practiceOrder) && song2.practiceOrder > 0 ? String(song2.practiceOrder) : "",
-      tagsToCsvField(song2.tags)
+      tagsToCsvField(song2.tags),
+      // v1.4.1：備用歌單歸屬（呼叫端算好的字串，見 practiceSetsToCsvField）
+      practiceSetsCell ?? ""
     ];
   }
   function tagsToCsvField(tags) {
     return (Array.isArray(tags) ? tags : []).filter((t) => t && String(t.category ?? "").trim() && String(t.value ?? "").trim()).map((t) => `${String(t.category).trim()}:${String(t.value).trim()}`).join(CSV_LIST_SEP);
+  }
+  function encodeSetName(name) {
+    return String(name ?? "").replace(/%/g, "%25").replace(/\|/g, "%7C").replace(/@/g, "%40");
+  }
+  function decodeSetName(text) {
+    return String(text ?? "").replace(/%(7C|40)/gi, (_, h) => h === "40" ? "@" : "|").replace(/%25/g, "%");
+  }
+  function practiceSetsToCsvField(memberships) {
+    return (memberships || []).filter((m) => m && String(m.name ?? "").trim() && Number.isFinite(m.pos) && m.pos > 0).map((m) => `${encodeSetName(String(m.name).trim())}@${Math.floor(m.pos)}`).join(CSV_LIST_SEP);
+  }
+  function parsePracticeSetsFromCsv(cell) {
+    const s = String(cell ?? "").trim();
+    if (s === "") return [];
+    const out = [];
+    for (const part of s.split(CSV_LIST_SEP)) {
+      const bits = part.split("@");
+      if (bits.length !== 2) continue;
+      const name = decodeSetName(bits[0]).trim();
+      if (!name) continue;
+      const n = Number(bits[1]);
+      out.push({ name, pos: Number.isInteger(n) && n > 0 ? n : Infinity });
+    }
+    return out;
   }
   function parseTagsFromCsv(cell) {
     const s = String(cell ?? "").trim();
@@ -12772,7 +12873,9 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       // v0.7.0：練習歌單順序（舊 CSV 沒有這一欄 → null）。壞值（非數字、0、負數）一律當成不在練習歌單
       practiceOrder: parsePracticeOrderFromCsv(get("practiceOrder")),
       // v0.9.0：標籤（舊 CSV 沒有這一欄 → 空陣列）
-      tags: parseTagsFromCsv(get("tags"))
+      tags: parseTagsFromCsv(get("tags")),
+      // v1.4.1：備用歌單歸屬（舊 CSV 沒有這一欄 → 空陣列）
+      practiceSets: parsePracticeSetsFromCsv(get("practiceSets"))
     };
   }
   function isBlankCsvRow(row) {
@@ -12805,7 +12908,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
 
   // js/io/file-io.js
   async function exportSongs(entries, filename = "utanote_export.csv") {
-    const rows = [CSV_HEADERS, ...entries.map(({ song: song2, listName }) => songToCsvRow(song2, listName))];
+    const rows = [CSV_HEADERS, ...entries.map(({ song: song2, listName, practiceSets }) => songToCsvRow(song2, listName, practiceSets))];
     const csvText = withBom(rowsToCsv(rows));
     await saveTextFile(filename, csvText, "text/csv");
   }
@@ -12867,7 +12970,9 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       if (!importItem.title && !importItem.artist) continue;
       results.push({
         list: importItem.list,
-        song: importedItemToSong(importItem)
+        song: importedItemToSong(importItem),
+        // v1.4.1：這首歌的備用歌單歸屬（Song 本身不存；只有我的歌庫的歌才有意義，由 app.js 組成備用歌單）
+        practiceSets: importItem.list === "wishlist" ? [] : importItem.practiceSets
       });
     }
     return results;
@@ -13398,8 +13503,16 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     refreshView();
   }
   async function handleExportCsv() {
+    const memberships = membershipsBySong(
+      normalizePracticeSets(getPracticeSets()),
+      state.lists.library.songs
+    );
     const entries = [
-      ...state.lists.library.songs.map((song2) => ({ song: song2, listName: "library" })),
+      ...state.lists.library.songs.map((song2) => ({
+        song: song2,
+        listName: "library",
+        practiceSets: practiceSetsToCsvField(memberships.get(song2.id))
+      })),
       ...state.lists.wishlist.songs.map((song2) => ({ song: song2, listName: "wishlist" }))
     ];
     await exportSongs(entries, "uta-note-songs.csv");
@@ -13421,6 +13534,11 @@ ${err.message}`);
       return;
     }
     const existingTotal = state.lists.library.songs.length + state.lists.wishlist.songs.length;
+    const importedSets = setsFromMemberships(
+      importedEntries.filter((e) => e.list !== "wishlist").map((e) => ({ song: e.song, memberships: e.practiceSets }))
+    );
+    const existingSets = normalizePracticeSets(getPracticeSets());
+    let replaceAll = false;
     let baseLists = state.lists;
     const decisions = /* @__PURE__ */ new Map();
     if (existingTotal === 0) {
@@ -13439,9 +13557,10 @@ ${err.message}`);
       if (mode3 === "cancel") return;
       if (mode3 === "replaceAll") {
         const ok = window.confirm(
-          `\u5C07\u522A\u9664\u76EE\u524D\u5169\u500B\u6B4C\u55AE\u5171 ${existingTotal} \u9996\u6B4C\u66F2\uFF0C\u63DB\u6210\u8981\u532F\u5165\u7684 ${importedEntries.length} \u9996\uFF0C\u522A\u9664\u5F8C\u7121\u6CD5\u5FA9\u539F\u3002\u78BA\u5B9A\u55CE\uFF1F`
+          `\u5C07\u522A\u9664\u76EE\u524D\u5169\u500B\u6B4C\u55AE\u5171 ${existingTotal} \u9996\u6B4C\u66F2\uFF0C\u63DB\u6210\u8981\u532F\u5165\u7684 ${importedEntries.length} \u9996\uFF0C\u522A\u9664\u5F8C\u7121\u6CD5\u5FA9\u539F\u3002` + (importedSets.length > 0 && existingSets.length > 0 ? `\u5099\u7528\u6B4C\u55AE ${existingSets.length} \u4EFD\u4E5F\u6703\u63DB\u6210\u8981\u532F\u5165\u7684 ${importedSets.length} \u4EFD\u3002` : "") + "\u78BA\u5B9A\u55CE\uFF1F"
         );
         if (!ok) return;
+        replaceAll = true;
         baseLists = { library: { songs: [], selectedId: null }, wishlist: { songs: [], selectedId: null } };
       } else {
         let applyToRestValue = null;
@@ -13476,6 +13595,11 @@ ${err.message}`);
       state.lists[key].songs = nextLists[key].songs;
       state.lists[key].selectedId = nextLists[key].selectedId;
     });
+    const setsResult = mergeImportedSets(existingSets, importedSets, state.lists.library.songs, { replace: replaceAll });
+    let setsSaveFailed = false;
+    if (importedSets.length > 0) {
+      setsSaveFailed = !setPracticeSets(serializePracticeSets(setsResult.sets));
+    }
     saveData();
     refreshView();
     const summary = [
@@ -13484,7 +13608,13 @@ ${err.message}`);
       counts.skipped && `\u7565\u904E ${counts.skipped} \u9996`,
       counts.keptBoth && `\u4FDD\u7559\u5169\u8005 ${counts.keptBoth} \u9996`
     ].filter(Boolean).join("\u3001");
-    window.alert(`\u532F\u5165\u5B8C\u6210\uFF1A${summary || "\u6C92\u6709\u4EFB\u4F55\u8B8A\u66F4"}\u3002`);
+    const setsSummary = importedSets.length === 0 ? "" : setsSaveFailed ? "\u5099\u7528\u6B4C\u55AE\u6C92\u6709\u5B58\u9032\u53BB\uFF08\u700F\u89BD\u5668\u5132\u5B58\u7A7A\u9593\u4E0D\u8DB3\uFF09" : [
+      setsResult.added && `\u5099\u7528\u6B4C\u55AE\u65B0\u589E ${setsResult.added} \u4EFD${setsResult.renamed ? `\uFF08\u5176\u4E2D ${setsResult.renamed} \u4EFD\u8207\u73FE\u6709\u540C\u540D\u4F46\u5167\u5BB9\u4E0D\u540C\uFF0C\u5DF2\u6539\u540D\u52A0\u4E0A\u300C\uFF08\u532F\u5165\uFF09\u300D\uFF09` : ""}`,
+      setsResult.skipped && `\u5099\u7528\u6B4C\u55AE\u7565\u904E ${setsResult.skipped} \u4EFD\uFF08\u8207\u73FE\u6709\u7684\u76F8\u540C\uFF09`,
+      setsResult.overLimit && `\u5099\u7528\u6B4C\u55AE\u6709 ${setsResult.overLimit} \u4EFD\u8D85\u904E\u4E0A\u9650\u800C\u7565\u904E`
+    ].filter(Boolean).join("\u3001");
+    window.alert(`\u532F\u5165\u5B8C\u6210\uFF1A${summary || "\u6C92\u6709\u4EFB\u4F55\u8B8A\u66F4"}\u3002${setsSummary ? `
+${setsSummary}\u3002` : ""}`);
   }
   function handleClearSongs(scope) {
     if (scope === "active" && state.practiceView) {
