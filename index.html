@@ -1514,7 +1514,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 1.5.0</span>
+        <span class="tabular-nums">V 1.5.1</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -3358,6 +3358,218 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     song2.pinnedAt = maxPinnedAt + 1;
   }
 
+  // js/engine/practice-queue.js
+  var PRACTICE_MODE_DEFAULT = Object.freeze({ shuffle: false, loop: false, interval: false });
+  var LEGACY_MODES = {
+    order: { shuffle: false, loop: false, interval: false },
+    loop: { shuffle: false, loop: true, interval: false },
+    shuffle: { shuffle: true, loop: true, interval: false }
+  };
+  function normalizePracticeMode(value) {
+    let v = value;
+    if (typeof v === "string") {
+      if (Object.hasOwn(LEGACY_MODES, v)) return { ...LEGACY_MODES[v] };
+      try {
+        v = JSON.parse(v);
+      } catch {
+        return { ...PRACTICE_MODE_DEFAULT };
+      }
+    }
+    if (v && typeof v === "object") return { shuffle: v.shuffle === true, loop: v.loop === true, interval: v.interval === true };
+    return { ...PRACTICE_MODE_DEFAULT };
+  }
+  function serializePracticeMode(mode3) {
+    return JSON.stringify(normalizePracticeMode(mode3));
+  }
+  function isInPractice(song2) {
+    return !!song2 && typeof song2.practiceOrder === "number" && Number.isFinite(song2.practiceOrder) && song2.practiceOrder > 0;
+  }
+  function getPracticeSongs(songs) {
+    return (songs || []).map((song2, index) => ({ song: song2, index })).filter((e) => isInPractice(e.song)).sort((a, b) => a.song.practiceOrder - b.song.practiceOrder || a.index - b.index).map((e) => e.song);
+  }
+  function renumberPractice(songs) {
+    const sorted = getPracticeSongs(songs);
+    sorted.forEach((s, i) => {
+      s.practiceOrder = i + 1;
+    });
+    return sorted;
+  }
+  function mergePracticeOrders(songs, importedIds) {
+    const sorted = getPracticeSongs(songs);
+    const kept = sorted.filter((s) => !importedIds.has(s.id));
+    const incoming = sorted.filter((s) => importedIds.has(s.id));
+    [...kept, ...incoming].forEach((s, i) => {
+      s.practiceOrder = i + 1;
+    });
+  }
+  function addToPractice(songs, song2) {
+    if (!song2 || isInPractice(song2)) return false;
+    const count = renumberPractice(songs).length;
+    song2.practiceOrder = count + 1;
+    return true;
+  }
+  function removeFromPractice(songs, song2) {
+    if (!song2 || !isInPractice(song2)) return false;
+    song2.practiceOrder = null;
+    renumberPractice(songs);
+    return true;
+  }
+  function clearPractice(songs) {
+    let n = 0;
+    for (const s of songs || []) {
+      if (isInPractice(s)) {
+        s.practiceOrder = null;
+        n++;
+      }
+    }
+    return n;
+  }
+  function movePractice(songs, song2, delta) {
+    const sorted = getPracticeSongs(songs);
+    const from = sorted.indexOf(song2);
+    const to = from + delta;
+    if (from < 0 || !Number.isInteger(delta) || delta === 0 || to < 0 || to >= sorted.length) return false;
+    sorted.splice(from, 1);
+    sorted.splice(to, 0, song2);
+    sorted.forEach((s, i) => {
+      s.practiceOrder = i + 1;
+    });
+    return true;
+  }
+  function hasPlayableAudio(song2) {
+    return !!song2 && Array.isArray(song2.audioList) && song2.audioList.some((v) => String(v ?? "").trim() !== "");
+  }
+  function shuffleIds(ids, rng = Math.random) {
+    const a = ids.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function createPlan({ queueIds: queueIds2, isUsable: isUsable2, startId = null, mode: mode3, rng = Math.random }) {
+    const { shuffle, loop: loop2 } = normalizePracticeMode(mode3);
+    const playable = queueIds2.filter(isUsable2);
+    if (playable.length === 0) return null;
+    if (shuffle) {
+      const shuffled = shuffleIds(playable, rng);
+      if (startId != null) {
+        if (playable.includes(startId)) {
+          return { ids: [startId, ...shuffled.filter((id) => id !== startId)], pos: 0 };
+        }
+      }
+      return { ids: shuffled, pos: 0 };
+    }
+    let from = 0;
+    if (startId != null) {
+      const startIndex = queueIds2.indexOf(startId);
+      if (startIndex >= 0) {
+        const found = queueIds2.findIndex((id, i) => i >= startIndex && isUsable2(id));
+        if (found >= 0) from = playable.indexOf(queueIds2[found]);
+        else if (!loop2) return null;
+      }
+    }
+    return { ids: playable.slice(from), pos: 0 };
+  }
+  function currentOfPlan(plan) {
+    return plan ? plan.ids[plan.pos] : null;
+  }
+  function nextInPlan(plan, { queueIds: queueIds2, isUsable: isUsable2, mode: mode3, rng = Math.random }) {
+    if (!plan) return null;
+    const { shuffle, loop: loop2 } = normalizePracticeMode(mode3);
+    let ids = plan.ids;
+    let pos = plan.pos;
+    const guard = ids.length + queueIds2.length + 2;
+    for (let step = 0; step < guard; step++) {
+      pos += 1;
+      if (pos >= ids.length) {
+        if (!loop2) return null;
+        const playable = queueIds2.filter(isUsable2);
+        if (playable.length === 0) return null;
+        const last = ids[ids.length - 1];
+        if (shuffle) {
+          let next = shuffleIds(playable, rng);
+          if (next.length > 1 && next[0] === last) {
+            const swapAt = 1 + Math.floor(rng() * (next.length - 1));
+            [next[0], next[swapAt]] = [next[swapAt], next[0]];
+          }
+          ids = next;
+        } else {
+          ids = playable;
+        }
+        pos = 0;
+      }
+      if (isUsable2(ids[pos])) return { ids, pos };
+    }
+    return null;
+  }
+  function previousInPlan(plan, { isUsable: isUsable2 }) {
+    if (!plan) return null;
+    for (let pos = plan.pos - 1; pos >= 0; pos--) {
+      if (isUsable2(plan.ids[pos])) return { ids: plan.ids, pos };
+    }
+    return null;
+  }
+  function planProgress(plan, isUsable2) {
+    if (!plan || !Array.isArray(plan.ids)) return { position: 0, total: 0, left: 0 };
+    let position = 0;
+    let total = 0;
+    plan.ids.forEach((id, i) => {
+      if (!isUsable2(id)) return;
+      total += 1;
+      if (i <= plan.pos) position += 1;
+    });
+    return { position, total, left: total - position };
+  }
+  function hasNextInPlan(plan, { queueIds: queueIds2, isUsable: isUsable2, mode: mode3 }) {
+    if (!plan) return false;
+    if (normalizePracticeMode(mode3).loop) return queueIds2.filter(isUsable2).length > 0;
+    for (let pos = plan.pos + 1; pos < plan.ids.length; pos++) if (isUsable2(plan.ids[pos])) return true;
+    return false;
+  }
+  function isKnownDuration(value) {
+    return typeof value === "number" && Number.isFinite(value) && value > 0;
+  }
+  function summarizeQueueTime({ queueIds: queueIds2, isUsable: isUsable2, durationOf, plan = null, elapsed = 0 }) {
+    const usable2 = (queueIds2 || []).filter(isUsable2);
+    let total = 0;
+    let unknown = 0;
+    for (const id of usable2) {
+      const d = durationOf(id);
+      if (isKnownDuration(d)) total += d;
+      else unknown += 1;
+    }
+    const out = { count: usable2.length, total, unknown, remaining: null, remainingUnknown: 0, progress: null };
+    if (!plan || !Array.isArray(plan.ids)) return out;
+    const played = Math.max(0, Number.isFinite(elapsed) ? elapsed : 0);
+    let planTotal = 0;
+    let remaining = 0;
+    let remainingUnknown = 0;
+    plan.ids.forEach((id, i) => {
+      if (!isUsable2(id)) return;
+      const d = durationOf(id);
+      if (!isKnownDuration(d)) {
+        if (i >= plan.pos) remainingUnknown += 1;
+        return;
+      }
+      planTotal += d;
+      if (i > plan.pos) remaining += d;
+      else if (i === plan.pos) remaining += Math.max(0, d - played);
+    });
+    out.remaining = remaining;
+    out.remainingUnknown = remainingUnknown;
+    out.progress = planTotal > 0 ? Math.min(1, Math.max(0, 1 - remaining / planTotal)) : null;
+    return out;
+  }
+  function formatClock(seconds) {
+    const s = Math.max(0, Math.ceil(Number.isFinite(seconds) ? seconds : 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor(s % 3600 / 60);
+    const sec = s % 60;
+    const two = (n) => String(n).padStart(2, "0");
+    return h > 0 ? `${h}:${two(m)}:${two(sec)}` : `${m}:${two(sec)}`;
+  }
+
   // js/engine/play-resume.js
   var RESUME_MIN_SECONDS = 3;
   var RESUME_END_MARGIN_SECONDS = 3;
@@ -3411,6 +3623,15 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function isResumeAlreadyHere(record, selectedSong, activeAudioValue) {
     const rec = normalizeResume(record);
     return !!rec && !!selectedSong && selectedSong.id === rec.songId && String(activeAudioValue ?? "").trim().normalize("NFC") === rec.sourceKey.normalize("NFC");
+  }
+  function resolveQueueReopen(record, librarySongs2) {
+    const rec = normalizeResume(record);
+    if (!rec || !rec.inQueue) return null;
+    const song2 = (librarySongs2 || []).find((s) => s && s.id === rec.songId);
+    if (!song2 || !isInPractice(song2) || !hasPlayableAudio(song2)) return null;
+    const want = rec.sourceKey.normalize("NFC");
+    const found = (song2.audioList || []).some((v) => String(v ?? "").trim().normalize("NFC") === want);
+    return found ? { song: song2, sourceKey: rec.sourceKey } : null;
   }
 
   // js/engine/tags.js
@@ -4076,218 +4297,6 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
     song2.audioList[index] = target;
     return { ok: true, mode: "replaced" };
-  }
-
-  // js/engine/practice-queue.js
-  var PRACTICE_MODE_DEFAULT = Object.freeze({ shuffle: false, loop: false, interval: false });
-  var LEGACY_MODES = {
-    order: { shuffle: false, loop: false, interval: false },
-    loop: { shuffle: false, loop: true, interval: false },
-    shuffle: { shuffle: true, loop: true, interval: false }
-  };
-  function normalizePracticeMode(value) {
-    let v = value;
-    if (typeof v === "string") {
-      if (Object.hasOwn(LEGACY_MODES, v)) return { ...LEGACY_MODES[v] };
-      try {
-        v = JSON.parse(v);
-      } catch {
-        return { ...PRACTICE_MODE_DEFAULT };
-      }
-    }
-    if (v && typeof v === "object") return { shuffle: v.shuffle === true, loop: v.loop === true, interval: v.interval === true };
-    return { ...PRACTICE_MODE_DEFAULT };
-  }
-  function serializePracticeMode(mode3) {
-    return JSON.stringify(normalizePracticeMode(mode3));
-  }
-  function isInPractice(song2) {
-    return !!song2 && typeof song2.practiceOrder === "number" && Number.isFinite(song2.practiceOrder) && song2.practiceOrder > 0;
-  }
-  function getPracticeSongs(songs) {
-    return (songs || []).map((song2, index) => ({ song: song2, index })).filter((e) => isInPractice(e.song)).sort((a, b) => a.song.practiceOrder - b.song.practiceOrder || a.index - b.index).map((e) => e.song);
-  }
-  function renumberPractice(songs) {
-    const sorted = getPracticeSongs(songs);
-    sorted.forEach((s, i) => {
-      s.practiceOrder = i + 1;
-    });
-    return sorted;
-  }
-  function mergePracticeOrders(songs, importedIds) {
-    const sorted = getPracticeSongs(songs);
-    const kept = sorted.filter((s) => !importedIds.has(s.id));
-    const incoming = sorted.filter((s) => importedIds.has(s.id));
-    [...kept, ...incoming].forEach((s, i) => {
-      s.practiceOrder = i + 1;
-    });
-  }
-  function addToPractice(songs, song2) {
-    if (!song2 || isInPractice(song2)) return false;
-    const count = renumberPractice(songs).length;
-    song2.practiceOrder = count + 1;
-    return true;
-  }
-  function removeFromPractice(songs, song2) {
-    if (!song2 || !isInPractice(song2)) return false;
-    song2.practiceOrder = null;
-    renumberPractice(songs);
-    return true;
-  }
-  function clearPractice(songs) {
-    let n = 0;
-    for (const s of songs || []) {
-      if (isInPractice(s)) {
-        s.practiceOrder = null;
-        n++;
-      }
-    }
-    return n;
-  }
-  function movePractice(songs, song2, delta) {
-    const sorted = getPracticeSongs(songs);
-    const from = sorted.indexOf(song2);
-    const to = from + delta;
-    if (from < 0 || !Number.isInteger(delta) || delta === 0 || to < 0 || to >= sorted.length) return false;
-    sorted.splice(from, 1);
-    sorted.splice(to, 0, song2);
-    sorted.forEach((s, i) => {
-      s.practiceOrder = i + 1;
-    });
-    return true;
-  }
-  function hasPlayableAudio(song2) {
-    return !!song2 && Array.isArray(song2.audioList) && song2.audioList.some((v) => String(v ?? "").trim() !== "");
-  }
-  function shuffleIds(ids, rng = Math.random) {
-    const a = ids.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(rng() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-  function createPlan({ queueIds: queueIds2, isUsable: isUsable2, startId = null, mode: mode3, rng = Math.random }) {
-    const { shuffle, loop: loop2 } = normalizePracticeMode(mode3);
-    const playable = queueIds2.filter(isUsable2);
-    if (playable.length === 0) return null;
-    if (shuffle) {
-      const shuffled = shuffleIds(playable, rng);
-      if (startId != null) {
-        if (playable.includes(startId)) {
-          return { ids: [startId, ...shuffled.filter((id) => id !== startId)], pos: 0 };
-        }
-      }
-      return { ids: shuffled, pos: 0 };
-    }
-    let from = 0;
-    if (startId != null) {
-      const startIndex = queueIds2.indexOf(startId);
-      if (startIndex >= 0) {
-        const found = queueIds2.findIndex((id, i) => i >= startIndex && isUsable2(id));
-        if (found >= 0) from = playable.indexOf(queueIds2[found]);
-        else if (!loop2) return null;
-      }
-    }
-    return { ids: playable.slice(from), pos: 0 };
-  }
-  function currentOfPlan(plan) {
-    return plan ? plan.ids[plan.pos] : null;
-  }
-  function nextInPlan(plan, { queueIds: queueIds2, isUsable: isUsable2, mode: mode3, rng = Math.random }) {
-    if (!plan) return null;
-    const { shuffle, loop: loop2 } = normalizePracticeMode(mode3);
-    let ids = plan.ids;
-    let pos = plan.pos;
-    const guard = ids.length + queueIds2.length + 2;
-    for (let step = 0; step < guard; step++) {
-      pos += 1;
-      if (pos >= ids.length) {
-        if (!loop2) return null;
-        const playable = queueIds2.filter(isUsable2);
-        if (playable.length === 0) return null;
-        const last = ids[ids.length - 1];
-        if (shuffle) {
-          let next = shuffleIds(playable, rng);
-          if (next.length > 1 && next[0] === last) {
-            const swapAt = 1 + Math.floor(rng() * (next.length - 1));
-            [next[0], next[swapAt]] = [next[swapAt], next[0]];
-          }
-          ids = next;
-        } else {
-          ids = playable;
-        }
-        pos = 0;
-      }
-      if (isUsable2(ids[pos])) return { ids, pos };
-    }
-    return null;
-  }
-  function previousInPlan(plan, { isUsable: isUsable2 }) {
-    if (!plan) return null;
-    for (let pos = plan.pos - 1; pos >= 0; pos--) {
-      if (isUsable2(plan.ids[pos])) return { ids: plan.ids, pos };
-    }
-    return null;
-  }
-  function planProgress(plan, isUsable2) {
-    if (!plan || !Array.isArray(plan.ids)) return { position: 0, total: 0, left: 0 };
-    let position = 0;
-    let total = 0;
-    plan.ids.forEach((id, i) => {
-      if (!isUsable2(id)) return;
-      total += 1;
-      if (i <= plan.pos) position += 1;
-    });
-    return { position, total, left: total - position };
-  }
-  function hasNextInPlan(plan, { queueIds: queueIds2, isUsable: isUsable2, mode: mode3 }) {
-    if (!plan) return false;
-    if (normalizePracticeMode(mode3).loop) return queueIds2.filter(isUsable2).length > 0;
-    for (let pos = plan.pos + 1; pos < plan.ids.length; pos++) if (isUsable2(plan.ids[pos])) return true;
-    return false;
-  }
-  function isKnownDuration(value) {
-    return typeof value === "number" && Number.isFinite(value) && value > 0;
-  }
-  function summarizeQueueTime({ queueIds: queueIds2, isUsable: isUsable2, durationOf, plan = null, elapsed = 0 }) {
-    const usable2 = (queueIds2 || []).filter(isUsable2);
-    let total = 0;
-    let unknown = 0;
-    for (const id of usable2) {
-      const d = durationOf(id);
-      if (isKnownDuration(d)) total += d;
-      else unknown += 1;
-    }
-    const out = { count: usable2.length, total, unknown, remaining: null, remainingUnknown: 0, progress: null };
-    if (!plan || !Array.isArray(plan.ids)) return out;
-    const played = Math.max(0, Number.isFinite(elapsed) ? elapsed : 0);
-    let planTotal = 0;
-    let remaining = 0;
-    let remainingUnknown = 0;
-    plan.ids.forEach((id, i) => {
-      if (!isUsable2(id)) return;
-      const d = durationOf(id);
-      if (!isKnownDuration(d)) {
-        if (i >= plan.pos) remainingUnknown += 1;
-        return;
-      }
-      planTotal += d;
-      if (i > plan.pos) remaining += d;
-      else if (i === plan.pos) remaining += Math.max(0, d - played);
-    });
-    out.remaining = remaining;
-    out.remainingUnknown = remainingUnknown;
-    out.progress = planTotal > 0 ? Math.min(1, Math.max(0, 1 - remaining / planTotal)) : null;
-    return out;
-  }
-  function formatClock(seconds) {
-    const s = Math.max(0, Math.ceil(Number.isFinite(seconds) ? seconds : 0));
-    const h = Math.floor(s / 3600);
-    const m = Math.floor(s % 3600 / 60);
-    const sec = s % 60;
-    const two = (n) => String(n).padStart(2, "0");
-    return h > 0 ? `${h}:${two(m)}:${two(sec)}` : `${m}:${two(sec)}`;
   }
 
   // js/engine/practice-sets.js
@@ -10597,7 +10606,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var $3 = (selector) => document.querySelector(selector);
   var TOGGLE_SELECTOR = "#pqModeGroup [data-toggle], #pqFootMode [data-toggle]";
   var PREV_RESTART_SEC = 3;
-  var q = { active: false, plan: null, mode: normalizePracticeMode(null), failed: /* @__PURE__ */ new Set(), manage: false, transitioning: false, sig: "", blocked: false, waiting: false, awaitingPlay: false, loadTries: /* @__PURE__ */ new Map() };
+  var q = { active: false, plan: null, mode: normalizePracticeMode(null), failed: /* @__PURE__ */ new Set(), manage: false, transitioning: false, sig: "", blocked: false, waiting: false, restored: false, awaitingPlay: false, loadTries: /* @__PURE__ */ new Map() };
   var deps3 = null;
   function librarySongs() {
     return deps3 ? deps3.getLibrarySongs() : [];
@@ -10840,7 +10849,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         status2.textContent = "\u5DF2\u5207\u63DB\u30FB\u8ACB\u6309\u64AD\u653E";
       } else if (isPlaying && q.waiting) {
         status2.className = "pq-status is-err";
-        status2.textContent = "\u9593\u6B47\u4E2D\u30FB\u8ACB\u6309\u64AD\u653E";
+        status2.textContent = q.restored ? "\u5DF2\u9084\u539F\u9023\u64AD\u30FB\u8ACB\u6309\u64AD\u653E" : "\u9593\u6B47\u4E2D\u30FB\u8ACB\u6309\u64AD\u653E";
       } else if (isPlaying) {
         status2.className = "pq-status is-ok";
         status2.textContent = "\u64AD\u653E\u4E2D";
@@ -11105,6 +11114,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
     if (!ok) return false;
     q.waiting = !play;
+    q.restored = false;
     if (play) playAudio();
     else {
       q.awaitingPlay = false;
@@ -11152,6 +11162,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     q.sig = "";
     q.blocked = false;
     q.waiting = false;
+    q.restored = false;
     q.awaitingPlay = false;
     showTapBanner(false);
     clearTimeout(playWatchTimer);
@@ -11265,6 +11276,26 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     if (q.active) reconcileQueueContents();
     renderState();
   }
+  function restoreQueueAfterReload() {
+    if (!deps3 || q.active) return false;
+    const pending2 = deps3.resume ? deps3.resume.getPending() : null;
+    if (!pending2 || !pending2.inQueue) return false;
+    const song2 = queueSongs().find((s) => s.id === pending2.songId);
+    if (!song2 || !hasPlayableAudio(song2)) return false;
+    const plan = createPlan({ queueIds: queueIds(), isUsable, startId: song2.id, mode: q.mode });
+    if (!plan || currentOfPlan(plan) !== song2.id) return false;
+    q.failed.clear();
+    q.loadTries.clear();
+    q.plan = plan;
+    q.active = true;
+    q.sig = queueIds().join(",");
+    q.waiting = true;
+    q.restored = true;
+    q.awaitingPlay = false;
+    renderState();
+    refreshListIfPracticeView();
+    return true;
+  }
   function stopPracticeQueue() {
     if (q.active) endQueue({ pause: true });
   }
@@ -11304,6 +11335,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       q.loadTries.delete(currentOfPlan(q.plan));
       if (q.waiting) {
         q.waiting = false;
+        q.restored = false;
         renderState();
         refreshListIfPracticeView();
         return;
@@ -12717,7 +12749,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function bindResumePosition(d) {
     deps5 = d;
     const record = normalizeResume(d.load());
-    if (record && canRestore(record, NaN)) {
+    if (record && (record.inQueue || canRestore(record, NaN))) {
       startupRecord = record;
       pending = record;
     }
@@ -14174,6 +14206,13 @@ ${setsSummary}\u3002` : ""}`);
         "\u8B80\u53D6\u6B4C\u66F2\u8CC7\u6599\u5931\u6557\uFF1A\u700F\u89BD\u5668\u88E1\u5132\u5B58\u7684\u8CC7\u6599\u5DF2\u640D\u6BC0\uFF0C\u800C\u4E14\u5099\u4EFD\u4E5F\u5931\u6557\u4E86\u3002\n\u63A5\u4E0B\u4F86\u4EFB\u4F55\u4FEE\u6539\u90FD\u6703\u8986\u84CB\u6389\u539F\u672C\u7684\u8CC7\u6599\uFF0C\u5982\u679C\u9700\u8981\u6551\u56DE\uFF0C\u8ACB\u5148\u4E0D\u8981\u64CD\u4F5C\u4E26\u95DC\u9589\u9019\u500B\u5206\u9801\u3002"
       );
     }
+    const reopen = resolveQueueReopen(getPlayResume(), state.lists.library.songs);
+    if (reopen) {
+      state.activeListId = "library";
+      state.practiceView = true;
+      state.lists.library.selectedId = reopen.song.id;
+      setActiveAudioSource(reopen.song.id, reopen.sourceKey);
+    }
     bindSidebarToggle();
     bindLyricsFontSizeToggle();
     bindLyricsSpacingToggle();
@@ -14288,6 +14327,7 @@ ${setsSummary}\u3002` : ""}`);
       e.returnValue = "";
     });
     refreshView();
+    restoreQueueAfterReload();
     if (syncInfo.resumeAdopted) maybePromptResume();
     if (getTourSeenVersion() < TOUR_VERSION) {
       startTour(() => setTourSeenVersion(TOUR_VERSION));
