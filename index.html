@@ -1514,7 +1514,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 1.5.1</span>
+        <span class="tabular-nums">V 1.5.2</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -3104,7 +3104,10 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
   }
   function setSidebarCollapsed(collapsed) {
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
+    } catch {
+    }
   }
   function isNarrowViewport() {
     return typeof matchMedia === "function" && matchMedia("(max-width:768px)").matches;
@@ -3116,7 +3119,10 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
   function setLyricsFontSize(size) {
     if (!LYRICS_FONT_SIZES.includes(size)) return;
-    localStorage.setItem(LYRICS_FONT_SIZE_KEY, size);
+    try {
+      localStorage.setItem(LYRICS_FONT_SIZE_KEY, size);
+    } catch {
+    }
   }
   function getLyricsSpacing() {
     try {
@@ -3234,19 +3240,28 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return raw === null ? true : raw === "1";
   }
   function setFuriganaVisible(visible) {
-    localStorage.setItem(FURIGANA_VISIBLE_KEY, visible ? "1" : "0");
+    try {
+      localStorage.setItem(FURIGANA_VISIBLE_KEY, visible ? "1" : "0");
+    } catch {
+    }
   }
   function getPdfTwoColumn() {
     return localStorage.getItem(PDF_TWO_COLUMN_KEY) === "1";
   }
   function setPdfTwoColumn(twoColumn) {
-    localStorage.setItem(PDF_TWO_COLUMN_KEY, twoColumn ? "1" : "0");
+    try {
+      localStorage.setItem(PDF_TWO_COLUMN_KEY, twoColumn ? "1" : "0");
+    } catch {
+    }
   }
   function getPdfLandscape() {
     return localStorage.getItem(PDF_LANDSCAPE_KEY) === "1";
   }
   function setPdfLandscape(landscape) {
-    localStorage.setItem(PDF_LANDSCAPE_KEY, landscape ? "1" : "0");
+    try {
+      localStorage.setItem(PDF_LANDSCAPE_KEY, landscape ? "1" : "0");
+    } catch {
+    }
   }
   function getTourSeenVersion() {
     const raw = localStorage.getItem(TOUR_SEEN_VERSION_KEY);
@@ -3254,14 +3269,20 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return Number.isFinite(parsed) ? parsed : 0;
   }
   function setTourSeenVersion(version) {
-    localStorage.setItem(TOUR_SEEN_VERSION_KEY, String(version));
+    try {
+      localStorage.setItem(TOUR_SEEN_VERSION_KEY, String(version));
+    } catch {
+    }
   }
   function getMobileViewMode() {
     const raw = localStorage.getItem(MOBILE_VIEW_MODE_KEY);
     return raw === "practice" ? "practice" : "browse";
   }
   function setMobileViewMode(mode3) {
-    localStorage.setItem(MOBILE_VIEW_MODE_KEY, mode3 === "practice" ? "practice" : "browse");
+    try {
+      localStorage.setItem(MOBILE_VIEW_MODE_KEY, mode3 === "practice" ? "practice" : "browse");
+    } catch {
+    }
   }
   var VIDEO_WINDOW_SIZES = ["small", "medium", "large"];
   function getVideoWindowPrefs() {
@@ -5804,7 +5825,10 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       dragging = false;
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
-      localStorage.setItem(WIDTH_STORAGE_KEY, parseInt(column.style.width, 10));
+      try {
+        localStorage.setItem(WIDTH_STORAGE_KEY, parseInt(column.style.width, 10));
+      } catch {
+      }
     }
     handle.addEventListener("mousedown", (e) => {
       dragging = true;
