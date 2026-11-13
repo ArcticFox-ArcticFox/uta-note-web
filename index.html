@@ -1514,7 +1514,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 1.5.2</span>
+        <span class="tabular-nums">V 1.5.3</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
@@ -2374,6 +2374,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var conflictServerRev = null;
   var status = "synced";
   var statusHandler = null;
+  var cacheStale = false;
   var restoring = false;
   var resumeKey = null;
   var resumePending = null;
@@ -2421,6 +2422,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     storageKey = key;
     resumeKey = rKey;
     mode = "local";
+    cacheStale = false;
     let server;
     try {
       const res = await fetchWithTimeout(API_URL);
@@ -2434,14 +2436,24 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     setStatus("synced");
     const serverHasData = server.rev > 0 && server.data !== null;
     const localRaw = localStorage.getItem(storageKey);
+    let localCorrupt = false;
+    if (localRaw) {
+      try {
+        JSON.parse(localRaw);
+      } catch {
+        localCorrupt = true;
+      }
+    }
     const decision = decideStartup({
       serverHasData,
-      localHasData: Boolean(localRaw),
+      localHasData: Boolean(localRaw) && !localCorrupt,
       dirty: localStorage.getItem(DIRTY_KEY) === "1",
       savedRev: readSavedRev(),
       serverRev: server.rev
     });
     let localBackupKey = null;
+    let corruptBackupKey = null;
+    let cacheWriteFailed = false;
     let useServer = decision === "use-server";
     if (decision === "conflict") useServer = askConflict({ serverRev: server.rev });
     currentRev = server.rev;
@@ -2455,12 +2467,26 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         }
       }
       const merged = mergeServerIntoLocal(server.data, localRaw);
-      localStorage.setItem(storageKey, merged);
-      localStorage.setItem(REV_KEY, String(server.rev));
-      localStorage.removeItem(DIRTY_KEY);
-      lastSyncedJson = JSON.stringify(toSyncPayload(merged));
+      try {
+        if (localCorrupt) {
+          const key2 = `${storageKey}_corrupt_${Date.now()}`;
+          localStorage.setItem(key2, localRaw);
+          corruptBackupKey = key2;
+        }
+        localStorage.setItem(storageKey, merged);
+        localStorage.setItem(REV_KEY, String(server.rev));
+        localStorage.removeItem(DIRTY_KEY);
+        lastSyncedJson = JSON.stringify(toSyncPayload(merged));
+      } catch {
+        cacheStale = true;
+        cacheWriteFailed = true;
+        setStatus("offline");
+      }
     } else if (decision === "push-local" || decision === "conflict") {
-      localStorage.setItem(DIRTY_KEY, "1");
+      try {
+        localStorage.setItem(DIRTY_KEY, "1");
+      } catch {
+      }
       lastSyncedJson = null;
       pendingJson = JSON.stringify(toSyncPayload(localRaw));
       forceNextPush = decision === "conflict";
@@ -2476,10 +2502,10 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       if (document.visibilityState === "visible") refreshResume();
     });
     const resumeAdopted = await pullResume() === "adopted";
-    return { mode, localBackupKey, resumeAdopted };
+    return { mode, localBackupKey, corruptBackupKey, cacheWriteFailed, resumeAdopted };
   }
   function scheduleRemotePush(raw) {
-    if (mode !== "server" || restoring) return;
+    if (mode !== "server" || restoring || cacheStale) return;
     let json;
     try {
       json = JSON.stringify(toSyncPayload(raw));
@@ -2502,7 +2528,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     pushTimer = setTimeout(push, delay);
   }
   async function push() {
-    if (inflight || paused || restoring || pendingJson === null) return;
+    if (inflight || paused || restoring || cacheStale || pendingJson === null) return;
     clearTimeout(retryTimer);
     inflight = true;
     const sending = pendingJson;
@@ -2718,6 +2744,10 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var RETRY_DELAY_MS2 = 15e3;
   var TIMEOUT_MS = 5e3;
   var MAX_ATTEMPTS = 4;
+  var MAX_VALUE_CHARS = 5e5;
+  function isTooLargeForSync(value) {
+    return JSON.stringify(value ?? null).length > MAX_VALUE_CHARS;
+  }
   async function runStoreSync({ read, write: write2, merge, get, put, now = Date.now }) {
     let server = await get();
     let adopted = false;
@@ -2737,14 +2767,23 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   var stores = /* @__PURE__ */ new Map();
   var enabled = false;
   var listenersBound = false;
-  function registerSyncedStore({ name, storageKey: storageKey2, merge, onAdopted = null }) {
-    stores.set(name, { storageKey: storageKey2, merge, onAdopted, timer: null, busy: false, again: false, disabled: false, lastRunAt: 0 });
+  function registerSyncedStore({ name, storageKey: storageKey2, merge, onAdopted = null, onTooLarge = null }) {
+    stores.set(name, { storageKey: storageKey2, merge, onAdopted, onTooLarge, warnedTooLarge: false, timer: null, busy: false, again: false, disabled: false, lastRunAt: 0 });
   }
+  var corruptBackedUp = /* @__PURE__ */ new Set();
   function readLocal(storageKey2) {
+    let raw = null;
     try {
-      const raw = localStorage.getItem(storageKey2);
+      raw = localStorage.getItem(storageKey2);
       return raw === null ? null : JSON.parse(raw);
     } catch {
+      if (typeof raw === "string" && !corruptBackedUp.has(storageKey2)) {
+        corruptBackedUp.add(storageKey2);
+        try {
+          localStorage.setItem(`${storageKey2}_corrupt_${Date.now()}`, raw);
+        } catch {
+        }
+      }
       return null;
     }
   }
@@ -2758,6 +2797,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
   var Unsupported = class extends Error {
+  };
+  var TooLarge = class extends Error {
   };
   async function syncOne(name) {
     const s = stores.get(name);
@@ -2785,6 +2826,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
           return { rev: body.rev, value: body.value ?? null };
         },
         put: async (baseRev, value) => {
+          if (isTooLargeForSync(value)) throw new TooLarge();
           const res = await request(url, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -2794,14 +2836,21 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
             const body = await res.json();
             return { ok: false, conflict: true, rev: body.rev, value: body.value ?? null };
           }
+          if (res.status === 413) throw new TooLarge();
           if (!res.ok) throw new Error(`PUT ${res.status}`);
           return { ok: true, rev: (await res.json()).rev };
         }
       });
+      s.warnedTooLarge = false;
       if (result.adopted && s.onAdopted) s.onAdopted(name);
     } catch (err) {
       if (err instanceof Unsupported) {
         s.disabled = true;
+      } else if (err instanceof TooLarge) {
+        if (!s.warnedTooLarge && s.onTooLarge) {
+          s.warnedTooLarge = true;
+          s.onTooLarge(name);
+        }
       } else {
         s.timer = setTimeout(() => syncOne(name), RETRY_DELAY_MS2);
       }
@@ -3041,8 +3090,15 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       return false;
     }
   }
+  function readItem(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
   function loadData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = readItem(STORAGE_KEY);
     if (!raw) {
       state.lists.library.songs = createSampleLibrarySongs();
       state.lists.wishlist.songs = createSampleWishlistSongs();
@@ -3101,7 +3157,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     list.selectedTags = [];
   }
   function getSidebarCollapsed() {
-    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
+    return readItem(SIDEBAR_COLLAPSED_KEY) === "1";
   }
   function setSidebarCollapsed(collapsed) {
     try {
@@ -3113,7 +3169,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     return typeof matchMedia === "function" && matchMedia("(max-width:768px)").matches;
   }
   function getLyricsFontSize() {
-    const raw = localStorage.getItem(LYRICS_FONT_SIZE_KEY);
+    const raw = readItem(LYRICS_FONT_SIZE_KEY);
     if (LYRICS_FONT_SIZES.includes(raw)) return raw;
     return isNarrowViewport() ? "small" : LYRICS_FONT_SIZE_DEFAULT;
   }
@@ -3236,7 +3292,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
   function getFuriganaVisible() {
-    const raw = localStorage.getItem(FURIGANA_VISIBLE_KEY);
+    const raw = readItem(FURIGANA_VISIBLE_KEY);
     return raw === null ? true : raw === "1";
   }
   function setFuriganaVisible(visible) {
@@ -3246,7 +3302,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
   function getPdfTwoColumn() {
-    return localStorage.getItem(PDF_TWO_COLUMN_KEY) === "1";
+    return readItem(PDF_TWO_COLUMN_KEY) === "1";
   }
   function setPdfTwoColumn(twoColumn) {
     try {
@@ -3255,7 +3311,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
   function getPdfLandscape() {
-    return localStorage.getItem(PDF_LANDSCAPE_KEY) === "1";
+    return readItem(PDF_LANDSCAPE_KEY) === "1";
   }
   function setPdfLandscape(landscape) {
     try {
@@ -3264,7 +3320,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
   function getTourSeenVersion() {
-    const raw = localStorage.getItem(TOUR_SEEN_VERSION_KEY);
+    const raw = readItem(TOUR_SEEN_VERSION_KEY);
     const parsed = raw === null ? 0 : Number(raw);
     return Number.isFinite(parsed) ? parsed : 0;
   }
@@ -3275,7 +3331,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     }
   }
   function getMobileViewMode() {
-    const raw = localStorage.getItem(MOBILE_VIEW_MODE_KEY);
+    const raw = readItem(MOBILE_VIEW_MODE_KEY);
     return raw === "practice" ? "practice" : "browse";
   }
   function setMobileViewMode(mode3) {
@@ -3579,7 +3635,8 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     });
     out.remaining = remaining;
     out.remainingUnknown = remainingUnknown;
-    out.progress = planTotal > 0 ? Math.min(1, Math.max(0, 1 - remaining / planTotal)) : null;
+    const base = Math.max(total, planTotal);
+    out.progress = base > 0 ? Math.min(1, Math.max(0, 1 - remaining / base)) : null;
     return out;
   }
   function formatClock(seconds) {
@@ -4321,7 +4378,6 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   }
 
   // js/engine/practice-sets.js
-  var MAX_PRACTICE_SETS = 50;
   var MAX_SET_NAME_LENGTH = 30;
   var MAX_ITEMS_PER_SET = 2e3;
   var str = (v) => typeof v === "string" ? v : "";
@@ -4361,7 +4417,6 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       if (!set || seen.has(set.id)) continue;
       seen.add(set.id);
       out.push(set);
-      if (out.length >= MAX_PRACTICE_SETS) break;
     }
     return out;
   }
@@ -4492,12 +4547,11 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function mergeImportedSets(existing, imported, songs, { replace = false } = {}) {
     const incoming = imported || [];
     const base = (existing || []).slice();
-    const result = { sets: base, added: 0, skipped: 0, renamed: 0, overLimit: 0 };
+    const result = { sets: base, added: 0, skipped: 0, renamed: 0 };
     if (incoming.length === 0) return result;
     if (replace) {
-      result.sets = incoming.slice(0, MAX_PRACTICE_SETS);
+      result.sets = incoming.slice();
       result.added = result.sets.length;
-      result.overLimit = incoming.length - result.sets.length;
       return result;
     }
     const idsOf = (set) => resolvePracticeSet(set, songs).matched.map((s) => s.id).join("\0");
@@ -4505,10 +4559,6 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       const same = result.sets.find((s) => nameKey(s.name) === nameKey(set.name));
       if (same && idsOf(same) === idsOf(set)) {
         result.skipped++;
-        continue;
-      }
-      if (result.sets.length >= MAX_PRACTICE_SETS) {
-        result.overLimit++;
         continue;
       }
       if (same) {
@@ -4583,9 +4633,6 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     for (const t of [...a.tombstones, ...b.tombstones]) consider(t.id, t.deletedAt, null);
     let sets2 = [...best.values()].filter((v) => v.set).map((v) => v.set);
     const tombstones = [...best.entries()].filter(([, v]) => !v.set).map(([id, v]) => ({ id, deletedAt: v.at }));
-    if (sets2.length > MAX_PRACTICE_SETS) {
-      sets2 = sets2.slice().sort((x, y) => y.updatedAt - x.updatedAt || (x.id < y.id ? -1 : 1)).slice(0, MAX_PRACTICE_SETS);
-    }
     sets2.sort((x, y) => x.id < y.id ? -1 : x.id > y.id ? 1 : 0);
     const taken = [];
     sets2 = sets2.map((s) => {
@@ -10374,7 +10421,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         <td class="px-2 py-1">${escapeHtml(line)}</td>
         <td class="px-2 py-1" style="white-space:nowrap">${paired ? weak ? '<span style="color:var(--seal)">\uFF1F \u4E0D\u592A\u50CF</span>' : "\u2713" : '<span style="color:var(--seal)">\u26A0 \u7565\u904E</span>'}</td></tr>`;
       }).join("");
-      wrap.innerHTML = `<table class="w-full text-xs" style="border-collapse:collapse"><thead><tr style="color:var(--muted);text-align:left;position:sticky;top:0;background:#fff">
+      wrap.innerHTML = `<table class="w-full text-xs" style="border-collapse:collapse"><thead><tr style="color:var(--muted);text-align:left;position:sticky;top:0;background:var(--color-surface)">
       <th class="px-2 py-1">\u6642\u9593</th>${hasTimeline2 ? '<th class="px-2 py-1">\u73FE\u6709</th>' : ""}<th class="px-2 py-1">LRC \u6587\u5B57</th><th class="px-2 py-1">\u5C0D\u61C9\u884C</th><th class="px-2 py-1">\u4F60\u7684\u6B4C\u8A5E</th><th class="px-2 py-1"></th></tr></thead><tbody>${rows}</tbody></table>`;
     };
     return new Promise((resolve) => {
@@ -12935,7 +12982,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
         i += 1;
         continue;
       }
-      if (ch === '"') {
+      if (ch === '"' && field.length === 0) {
         inQuotes = true;
         i += 1;
         continue;
@@ -12979,6 +13026,16 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
       throw new Error("CSV \u7F3A\u5C11\u5FC5\u8981\u6B04\u4F4D\uFF1A\u81F3\u5C11\u9700\u8981 title\uFF08\u6B4C\u540D\uFF09\u6216 artist\uFF08\u6B4C\u624B\uFF09\u5176\u4E2D\u4E00\u500B\u3002");
     }
     return index;
+  }
+  function decodeCsvBytes(bytes) {
+    const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    if (b.length >= 2 && b[0] === 255 && b[1] === 254) return new TextDecoder("utf-16le").decode(b.subarray(2));
+    if (b.length >= 2 && b[0] === 254 && b[1] === 255) return new TextDecoder("utf-16be").decode(b.subarray(2));
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(b);
+    } catch {
+      throw new Error("\u9019\u500B\u6A94\u6848\u4E0D\u662F UTF-8 \u7DE8\u78BC\uFF08\u53EF\u80FD\u662F Excel \u5B58\u7684 Shift_JIS \u6216 Big5\uFF09\u3002\u8ACB\u5728 Excel \u53E6\u5B58\u65B0\u6A94\u6642\u9078\u300CCSV UTF-8\uFF08\u9017\u865F\u5206\u9694\uFF09\u300D\u518D\u532F\u5165\u3002");
+    }
   }
 
   // js/io/csv-mapper.js
@@ -13222,9 +13279,15 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
   function readFileAsText(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result ?? ""));
+      reader.onload = () => {
+        try {
+          resolve(decodeCsvBytes(reader.result));
+        } catch (err) {
+          reject(err);
+        }
+      };
       reader.onerror = () => reject(reader.error);
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     });
   }
   async function importSongs(file) {
@@ -13886,8 +13949,7 @@ ${err.message}`);
     ].filter(Boolean).join("\u3001");
     const setsSummary = importedSets.length === 0 ? "" : setsSaveFailed ? "\u5099\u7528\u6B4C\u55AE\u6C92\u6709\u5B58\u9032\u53BB\uFF08\u700F\u89BD\u5668\u5132\u5B58\u7A7A\u9593\u4E0D\u8DB3\uFF09" : [
       setsResult.added && `\u5099\u7528\u6B4C\u55AE\u65B0\u589E ${setsResult.added} \u4EFD${setsResult.renamed ? `\uFF08\u5176\u4E2D ${setsResult.renamed} \u4EFD\u8207\u73FE\u6709\u540C\u540D\u4F46\u5167\u5BB9\u4E0D\u540C\uFF0C\u5DF2\u6539\u540D\u52A0\u4E0A\u300C\uFF08\u532F\u5165\uFF09\u300D\uFF09` : ""}`,
-      setsResult.skipped && `\u5099\u7528\u6B4C\u55AE\u7565\u904E ${setsResult.skipped} \u4EFD\uFF08\u8207\u73FE\u6709\u7684\u76F8\u540C\uFF09`,
-      setsResult.overLimit && `\u5099\u7528\u6B4C\u55AE\u6709 ${setsResult.overLimit} \u4EFD\u8D85\u904E\u4E0A\u9650\u800C\u7565\u904E`
+      setsResult.skipped && `\u5099\u7528\u6B4C\u55AE\u7565\u904E ${setsResult.skipped} \u4EFD\uFF08\u8207\u73FE\u6709\u7684\u76F8\u540C\uFF09`
     ].filter(Boolean).join("\u3001");
     window.alert(`\u532F\u5165\u5B8C\u6210\uFF1A${summary || "\u6C92\u6709\u4EFB\u4F55\u8B8A\u66F4"}\u3002${setsSummary ? `
 ${setsSummary}\u3002` : ""}`);
@@ -14168,7 +14230,10 @@ ${setsSummary}\u3002` : ""}`);
     if (importInput) {
       importInput.addEventListener("change", (e) => {
         const file = e.target.files && e.target.files[0];
-        handleImportCsvFile(file).finally(() => {
+        handleImportCsvFile(file).catch((err) => {
+          console.error("[app.js] CSV \u532F\u5165\u5931\u6557\uFF1A", err);
+          window.alert(`\u532F\u5165\u5931\u6557\uFF1A${err && err.message ? err.message : err}`);
+        }).finally(() => {
           importInput.value = "";
         });
       });
@@ -14209,8 +14274,10 @@ ${setsSummary}\u3002` : ""}`);
       name: PRACTICE_SETS_SYNC_NAME,
       storageKey: PRACTICE_SETS_KEY,
       merge: mergePracticeStores,
-      onAdopted: () => renderPracticeSets()
+      onAdopted: () => renderPracticeSets(),
       // 拉到別台較新的內容：卡片重畫（內容簽章不同才會真的重畫）
+      // v1.5.3：份數不再有上限，改成資料大到 NAS 收不下時說出來（原本是合併時靜默丟掉最舊的）
+      onTooLarge: () => window.alert("\u5099\u7528\u6B4C\u55AE\u7684\u7E3D\u91CF\u8D85\u904E NAS \u540C\u6B65\u7684\u5927\u5C0F\u4E0A\u9650\uFF0C\u9019\u6B21\u6C92\u6709\u540C\u6B65\u5230\u5176\u4ED6\u88DD\u7F6E\u3002\n\u9019\u53F0\u88DD\u7F6E\u4E0A\u7684\u5099\u7528\u6B4C\u55AE\u90FD\u9084\u5728\uFF0C\u6C92\u6709\u88AB\u522A\u9664\uFF1B\u522A\u6389\u5E7E\u4EFD\u4E0D\u7528\u7684\u4E4B\u5F8C\u6703\u81EA\u52D5\u6062\u5FA9\u540C\u6B65\u3002")
     });
     if (isServerMode()) await initRemoteStores();
     window.utaChangeLog = getChangeLog;
@@ -14219,6 +14286,17 @@ ${setsSummary}\u3002` : ""}`);
     const loadResult = loadData();
     if (syncInfo.localBackupKey) {
       window.alert(`\u9019\u500B\u700F\u89BD\u5668\u539F\u672C\u7684\u6B4C\u5EAB\u5DF2\u5099\u4EFD\u5728 localStorage \u7684\u300C${syncInfo.localBackupKey}\u300D\u3002`);
+    }
+    if (syncInfo.corruptBackupKey) {
+      window.alert(
+        `\u9019\u500B\u700F\u89BD\u5668\u88E1\u5132\u5B58\u7684\u6B4C\u5EAB\u5DF2\u640D\u6BC0\uFF0C\u7121\u6CD5\u89E3\u6790\uFF0C\u5DF2\u6539\u7528 NAS \u4E0A\u7684\u7248\u672C\u3002
+\u640D\u6BC0\u7684\u539F\u59CB\u8CC7\u6599\u539F\u5C01\u4E0D\u52D5\u5099\u4EFD\u5728 localStorage \u7684\u300C${syncInfo.corruptBackupKey}\u300D\u3002`
+      );
+    }
+    if (syncInfo.cacheWriteFailed) {
+      window.alert(
+        "\u700F\u89BD\u5668\u7684\u5132\u5B58\u7A7A\u9593\u6EFF\u4E86\uFF0C\u653E\u4E0D\u4E0B NAS \u4E0A\u7684\u6B4C\u5EAB\u3002\n\n\u73FE\u5728\u756B\u9762\u4E0A\u662F\u9019\u500B\u700F\u89BD\u5668\u539F\u672C\u7684\u8CC7\u6599\uFF0C\u53EF\u80FD\u4E0D\u662F\u6700\u65B0\u7684\uFF1B\u9019\u6B21\u958B\u555F\u671F\u9593\u7684\u4FEE\u6539\u4E0D\u6703\u9001\u5230 NAS\uFF0C\u4E0B\u6B21\u958B\u555F\u6642\u4E5F\u53EF\u80FD\u88AB NAS \u4E0A\u7684\u7248\u672C\u53D6\u4EE3\u3002\n\u8ACB\u5148\u6E05\u51FA\u700F\u89BD\u5668\u7684\u5132\u5B58\u7A7A\u9593\uFF08\u4F8B\u5982\u522A\u6389 localStorage \u88E1\u540D\u7A31\u542B\u300C_beforeServer_\u300D\u6216\u300C_corrupt_\u300D\u7684\u820A\u5099\u4EFD\uFF09\uFF0C\u518D\u91CD\u65B0\u6574\u7406\u9801\u9762\u3002"
+      );
     }
     if (loadResult && loadResult.corruptBackupKey) {
       window.alert(
