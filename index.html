@@ -496,6 +496,9 @@ body.color-text #lyricsArea .lyric-line.is-current{
 }
 .lyric-line.multi-segment{
   flex-wrap:wrap;
+  /* 各段依「第一行本字的基線」對齊：有假名的段頂端多一排假名空間，用 flex-start 對齊頂端會讓本字高低不一（v1.5.4）。
+     段內圓點與文字欄本來就是 baseline 對齊，所以每段的基線＝它的本字基線 */
+  align-items:baseline;
   gap:0;
   padding:0;
 }
@@ -1514,7 +1517,7 @@ body.tour-demo-lyric-btns #lyricsHomeBtn.hidden{ display:block; }
     <div class="px-4 pt-4 pb-3 border-b border-[color:var(--line)] text-center">
       <h1 class="font-serif-jp text-lg font-bold tracking-wide">日文歌練習室</h1>
       <p class="text-xs text-[color:var(--muted)] mt-1">
-        <span class="tabular-nums">V 1.5.3</span>
+        <span class="tabular-nums">V 1.5.4</span>
         <span class="mx-1.5">·</span>
         <span>北極狐、ET、瑪利歐、Takua</span>
       </p>
